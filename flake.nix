@@ -40,6 +40,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # WPILib VMX 2020 archive: the FHS runtime package for the tree WPILibInstaller-Avalonia installs.
+    nix-frc2020-vmx = {
+      url = "git+https://github.com/VMX-WPILib-2020-Archive/nix-frc2020-vmx.git";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Home Manager desktop and application configuration.
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
@@ -47,7 +53,7 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, codex-desktop-linux, claude-desktop, zen-browser, noctalia, home-manager, ... }: {
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, codex-desktop-linux, claude-desktop, zen-browser, noctalia, home-manager, ... }: {
     # nixos-rebuild switch --flake .#linux
     # `nixos` is an alias: nixos-rebuild looks up the *current* hostname.
     nixosConfigurations = rec {
@@ -69,7 +75,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages noctalia; };
+              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";

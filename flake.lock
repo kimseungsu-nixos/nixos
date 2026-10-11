@@ -55,6 +55,24 @@
         "type": "github"
       }
     },
+    "flake-utils_2": {
+      "inputs": {
+        "systems": "systems_2"
+      },
+      "locked": {
+        "lastModified": 1710146030,
+        "narHash": "sha256-SZ5L6eA7HJ/nmkzGG7/ISclqe6oZdOZTNoesiInkXPQ=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "b1d9ab70662946ef0850d488da1c9019f3a9752a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "hnc2020": {
       "inputs": {
         "nixpkgs": "nixpkgs_3",
@@ -149,6 +167,27 @@
         "repo": "translations",
         "rev": "cf80b9fb56b5a34dd6847aeb4fb2aa5430d80edd",
         "type": "github"
+      }
+    },
+    "nix-frc2020-vmx": {
+      "inputs": {
+        "flake-utils": "flake-utils_2",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791695391,
+        "narHash": "sha256-8E5Oj3xqxYp+b0NQctmd+OsrmOW1eWUNHRaI8ulXXhc=",
+        "ref": "refs/heads/main",
+        "rev": "37a94e74909ba5dae49d0c7870dd06cdaa8862be",
+        "revCount": 37,
+        "type": "git",
+        "url": "https://github.com/VMX-WPILib-2020-Archive/nix-frc2020-vmx.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://github.com/VMX-WPILib-2020-Archive/nix-frc2020-vmx.git"
       }
     },
     "nix-packages": {
@@ -310,6 +349,7 @@
         "codex-desktop-linux": "codex-desktop-linux",
         "hnc2020": "hnc2020",
         "home-manager": "home-manager",
+        "nix-frc2020-vmx": "nix-frc2020-vmx",
         "nix-packages": "nix-packages",
         "nixpkgs": "nixpkgs_4",
         "noctalia": "noctalia",
@@ -317,6 +357,21 @@
       }
     },
     "systems": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_2": {
       "locked": {
         "lastModified": 1681028828,
         "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
