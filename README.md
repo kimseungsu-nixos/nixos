@@ -44,6 +44,9 @@ sudo nixos-rebuild switch --flake .#linux
 - The monitor is set to 3440x1440@100 in `home/niri.nix`; its default 50 Hz mode makes the
   pointer and windows trail visibly. `ntsync` is loaded for Wine's thread synchronisation.
 
+WPILib 2027 alpha tools (SysId, Glass, OutlineViewer, DataLogTool, WPICal, WPILib Utility) come from the
+`wpi2027-nix` input (`home/wpilib-2027.nix`) and are built from the allwpilib sources.
+
 WPILib VMX 2020 runs natively: WPILibInstaller-Avalonia installs the tree into `~/wpilib/2020_vmx`, and
 the `wpilib2020-vmx` package of the `nix-frc2020-vmx` input (`home/wpilib-vmx.nix`) starts it in an FHS environment
 (`wpilibcode2020_vmx`, `wpilib-elastic`, `wpilib-shell`; menu entries "WPILib VS Code 2020_vmx" and
