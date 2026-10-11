@@ -86,7 +86,6 @@
               # the activation.
               backupFileExtension = "hm-backup";
               sharedModules = [
-                ./home/fusion360.nix
                 ./home/noctalia-ap-list.nix
                 ./home/wpilib-vmx.nix
                 ./home/wpilib-2027.nix

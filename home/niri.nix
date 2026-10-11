@@ -33,7 +33,7 @@ let
         NIXOS_OZONE_WL "1"
     }
 
-    // Let Niri launch Xwayland on demand for Proton-based Fusion.
+    // Let Niri launch Xwayland on demand for X11 programs (Wine, KakaoTalk, ...).
     xwayland-satellite {
         path "${pkgs.xwayland-satellite}/bin/xwayland-satellite"
     }
@@ -90,34 +90,6 @@ let
         shadow { off; }
         geometry-corner-radius 0
         default-floating-position x=0 y=0 relative-to="bottom-right"
-    }
-
-    window-rule {
-        match app-id=r"(?i).*fusion.*"
-        open-floating true
-    }
-
-    window-rule {
-        match title=r"(?i).*autodesk fusion.*"
-        open-floating true
-    }
-
-    // Fusion windows arrive from Proton with this app-id, including auxiliary dialogs.
-    window-rule {
-        match app-id=r"^steam_proton$"
-        open-floating true
-        open-fullscreen false
-        open-maximized-to-edges false
-    }
-
-    // Fusion runs in its own X server, shown as one window; round it like the others. It opens
-    // as wide as that X server (fusion360-wine starts it at 2752x1370, plus the 4 px border), or
-    // Fusion would draw into more than the window shows.
-    window-rule {
-        match app-id=r"^org\.freedesktop\.Xwayland$"
-        default-column-width { fixed 2756; }
-        geometry-corner-radius 16
-        clip-to-geometry true
     }
 
     debug {

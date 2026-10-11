@@ -32,12 +32,6 @@ sudo nixos-rebuild switch --flake .#linux
   file managers too.
 - X11 tray icons (KakaoTalk under Wine) reach Noctalia through KDE's `xembedsniproxy`, built on
   its own and run as a user service (`home/xembedsniproxy`).
-- Autodesk Fusion runs on Wine staging with DXVK, no container (`fusion360-wine`, from
-  nix-packages). First run: `fusion360-wine install`, then start "Autodesk Fusion (Wine)".
-  It opens in its own X server (a window of this session) with the picom compositor, because
-  xwayland-satellite ignores X11 window shapes and opacity and left black blocks behind
-  Fusion's floating panels. The Arc card renders the 3D view; `FUSION_GPU=igpu` selects the
-  integrated one, `FUSION_DXVK_HUD=fps,devinfo` shows a frame-rate overlay.
 - Noctalia's Wi-Fi list is patched (`patches/noctalia-ap-list.patch`, wired in `home/noctalia-ap-list.nix`): every
   access point is a row with its band and channel, in one section per Wi-Fi adapter, so a network served
   by several APs (2.4/5 GHz, mesh) is no longer merged into one and each adapter can join its own network. This builds Noctalia from source; drop the module to use the cache again.
