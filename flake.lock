@@ -177,11 +177,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791700208,
-        "narHash": "sha256-d/BAQZ608YMpJk0VX0rlZW3Xf95GE31vYouk8iGOx3M=",
+        "lastModified": 1791700392,
+        "narHash": "sha256-a0iLOS7XIzp801UFUj9DOCJZ5EcCaXeIBrxoeBLgkng=",
         "ref": "refs/heads/main",
-        "rev": "061b5708c88ba07a43a338983d081c6a077ac0c4",
-        "revCount": 39,
+        "rev": "c4bd4c6fbc17475eb3ad0aa126b49b55f9e2869e",
+        "revCount": 40,
         "type": "git",
         "url": "https://github.com/VMX-WPILib-2020-Archive/nix-frc2020-vmx.git"
       },
