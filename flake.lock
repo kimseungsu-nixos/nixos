@@ -190,6 +190,27 @@
         "url": "https://github.com/VMX-WPILib-2020-Archive/nix-frc2020-vmx.git"
       }
     },
+    "nix-github-actions": {
+      "inputs": {
+        "nixpkgs": [
+          "wpi2027-nix",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1737420293,
+        "narHash": "sha256-F1G5ifvqTpJq7fdkT34e/Jy9VCyzd5XfJ9TO8fHhJWE=",
+        "owner": "nix-community",
+        "repo": "nix-github-actions",
+        "rev": "f4158fa080ef4503c8f4c820967d946c2af31ec9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nix-github-actions",
+        "type": "github"
+      }
+    },
     "nix-packages": {
       "inputs": {
         "hnc2020": "hnc2020_2",
@@ -353,6 +374,7 @@
         "nix-packages": "nix-packages",
         "nixpkgs": "nixpkgs_4",
         "noctalia": "noctalia",
+        "wpi2027-nix": "wpi2027-nix",
         "zen-browser": "zen-browser"
       }
     },
@@ -384,6 +406,27 @@
         "owner": "nix-systems",
         "repo": "default",
         "type": "github"
+      }
+    },
+    "wpi2027-nix": {
+      "inputs": {
+        "nix-github-actions": "nix-github-actions",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791701438,
+        "narHash": "sha256-S+mmuVYo63vBjXx7p8rs7b328YhtfkL0ropzbbn/UWM=",
+        "ref": "refs/heads/2027",
+        "rev": "6352d1da66ae83ca795241ee5fa7d962fdbcda91",
+        "revCount": 215,
+        "type": "git",
+        "url": "https://github.com/W4Studica/wpi2027-nix.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://github.com/W4Studica/wpi2027-nix.git"
       }
     },
     "zen-browser": {

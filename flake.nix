@@ -46,6 +46,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # FRC tools (SysId, Glass, PathPlanner, ...) ported to the WPILib 2027 alpha.
+    wpi2027-nix = {
+      url = "git+https://github.com/W4Studica/wpi2027-nix.git";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Home Manager desktop and application configuration.
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
@@ -53,7 +59,7 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, codex-desktop-linux, claude-desktop, zen-browser, noctalia, home-manager, ... }: {
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, wpi2027-nix, codex-desktop-linux, claude-desktop, zen-browser, noctalia, home-manager, ... }: {
     # nixos-rebuild switch --flake .#linux
     # `nixos` is an alias: nixos-rebuild looks up the *current* hostname.
     nixosConfigurations = rec {
@@ -75,7 +81,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx; };
+              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx wpi2027-nix; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";
