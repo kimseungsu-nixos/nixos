@@ -60,9 +60,8 @@ in
   # Studica Titan Config & Update App (udev rules for 0483:5740 / df11, dfu-util).
   programs.titan-config.enable = true;
 
-  # WPILib VMX 2020 (WPILibInstaller-Avalonia, scripts/nixos-distrobox.sh) runs in
-  # an Ubuntu distrobox container. hardware.graphics exposes Mesa at
-  # /run/opengl-driver, which distrobox bind-mounts into the container.
+  # podman/distrobox for containers (WPILib VMX 2020 itself runs natively, see home/wpilib-vmx.nix).
+  # hardware.graphics exposes Mesa at /run/opengl-driver, which distrobox bind-mounts into a container.
   virtualisation.podman.enable = true;
   hardware.graphics = {
     enable = true;

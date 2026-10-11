@@ -76,6 +76,7 @@
               sharedModules = [
                 ./home/fusion360.nix
                 ./home/noctalia-ap-list.nix
+                ./home/wpilib-vmx.nix
                 zen-browser.homeModules.beta
                 noctalia.homeModules.default
               ];

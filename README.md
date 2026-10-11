@@ -44,5 +44,8 @@ sudo nixos-rebuild switch --flake .#linux
 - The monitor is set to 3440x1440@100 in `home/niri.nix`; its default 50 Hz mode makes the
   pointer and windows trail visibly. `ntsync` is loaded for Wine's thread synchronisation.
 
-WPILib VMX 2020 runs in an Ubuntu distrobox container (podman):
-`scripts/nixos-distrobox.sh` in the WPILibInstaller-Avalonia repo.
+WPILib VMX 2020 runs natively: WPILibInstaller-Avalonia installs the tree into `~/wpilib/2020_vmx`, and
+the `wpilib-vmx` package from nix-packages (`home/wpilib-vmx.nix`) starts it in an FHS environment
+(`wpilibcode2020_vmx`, `wpilib-elastic`, `wpilib-shell`; menu entries "WPILib VS Code 2020_vmx" and
+"WPILib Elastic NT3 2020_vmx"). The old Ubuntu distrobox container (`scripts/nixos-distrobox.sh` in the
+installer repo) is no longer needed; podman and distrobox stay installed.
