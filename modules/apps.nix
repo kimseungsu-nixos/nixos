@@ -48,9 +48,6 @@ in
   # OBS Studio (screen recording / streaming), with the virtual camera module.
   programs.obs-studio.enable = true;
 
-  # VMware Workstation host, including vmmon/vmnet kernel modules.
-  virtualisation.vmware.host.enable = true;
-
   # Studica Hardware Manager. users get added to the dialout group (re-login needed).
   programs.studica-hardware-manager = {
     enable = true;

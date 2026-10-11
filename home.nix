@@ -8,9 +8,6 @@
 
   home.stateVersion = "26.05";
 
-  # Personal workflow for controlling the VMware Workstation window through its local MCP tools.
-  home.file.".codex/skills/vmware-window".source = ./home/codex-skills/vmware-window;
-
   # Seed the OBS profile and scene collection once on new installations. Copying only missing
   # files keeps OBS settings writable and preserves changes made later in the app.
   home.activation.seedObsStudioConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
