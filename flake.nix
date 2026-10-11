@@ -69,12 +69,13 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages; };
+              extraSpecialArgs = { inherit nix-packages noctalia; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";
               sharedModules = [
                 ./home/fusion360.nix
+                ./home/noctalia-ap-list.nix
                 zen-browser.homeModules.beta
                 noctalia.homeModules.default
               ];
