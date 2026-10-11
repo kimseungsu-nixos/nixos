@@ -1,7 +1,23 @@
 diff -ru a/src/dbus/network/network_manager_service.cpp b/src/dbus/network/network_manager_service.cpp
 --- a/src/dbus/network/network_manager_service.cpp	2026-10-11 11:31:19.952249102 +0900
-+++ b/src/dbus/network/network_manager_service.cpp	2026-10-11 11:31:20.033834604 +0900
-@@ -1929,6 +1929,19 @@
++++ b/src/dbus/network/network_manager_service.cpp	2026-10-11 11:56:34.267169876 +0900
+@@ -1921,6 +1921,15 @@
+                                           AccessPointInfo info;
+                                           info.path = apPath;
+                                           info.devicePath = devicePath;
++                                          try {
++                                            info.deviceName = std::string(
++                                                sdbus::createProxy(m_bus.connection(), kNmBusName, devicePath)
++                                                    ->getProperty("Interface")
++                                                    .onInterface(kNmDeviceInterface)
++                                                    .get<std::string>()
++                                            );
++                                          } catch (const sdbus::Error&) {
++                                          }
+                                           info.active = !activeApPath.empty() && apPath == activeApPath;
+                                           if (auto ssidIt = properties.find("Ssid"); ssidIt != properties.end()) {
+                                             try {
+@@ -1929,6 +1938,19 @@
                                              } catch (const sdbus::Error&) {
                                              }
                                            }
@@ -21,21 +37,27 @@ diff -ru a/src/dbus/network/network_manager_service.cpp b/src/dbus/network/netwo
                                            if (auto strengthIt = properties.find("Strength");
                                                strengthIt != properties.end()) {
                                              try {
-@@ -2022,32 +2035,24 @@
+@@ -2022,32 +2044,39 @@
  void NetworkManagerService::finishRefreshAccessPoints(
      std::vector<AccessPointInfo>& aps, std::function<void()> onComplete
  ) {
 -  // Deduplicate by SSID, keeping the strongest (and marking active if any entry is active).
 +  // Every access point is listed on its own (an SSID is often served by several: 2.4 and 5 GHz,
-+  // mesh nodes). Only the same hardware address seen through several adapters is merged, keeping
-+  // the strongest; networks with a hidden (empty) name cannot be joined from the list and are left out.
++  // mesh nodes), and once per Wi-Fi adapter: two adapters can join two networks at the same time,
++  // so the row the user clicks decides which adapter connects. Networks with a hidden (empty) name
++  // cannot be joined from the list and are left out.
    std::vector<AccessPointInfo> deduped;
    deduped.reserve(aps.size());
    for (auto& ap : aps) {
 -    auto it = std::ranges::find(deduped, ap.ssid, &AccessPointInfo::ssid);
--    if (it == deduped.end()) {
--      deduped.push_back(std::move(ap));
 +    if (ap.ssid.empty()) {
++      continue;
++    }
++    auto it = std::ranges::find_if(deduped, [&ap](const AccessPointInfo& other) {
++      return other.devicePath == ap.devicePath && (!ap.bssid.empty() ? other.bssid == ap.bssid : other.path == ap.path);
++    });
+     if (it == deduped.end()) {
+       deduped.push_back(std::move(ap));
        continue;
      }
 -    if (ap.active) {
@@ -45,14 +67,19 @@ diff -ru a/src/dbus/network/network_manager_service.cpp b/src/dbus/network/netwo
 -        it->active = true;
 -      }
 -      continue;
--    }
++    if (ap.active || (!it->active && ap.strength > it->strength)) {
++      *it = std::move(ap);
+     }
 -    if (it->active) {
-+    auto it = std::ranges::find_if(deduped, [&ap](const AccessPointInfo& other) {
-+      return !ap.bssid.empty() ? other.bssid == ap.bssid : other.path == ap.path;
-+    });
-+    if (it == deduped.end()) {
-+      deduped.push_back(std::move(ap));
-       continue;
+-      continue;
++  }
++  // The adapter name only helps when there is more than one.
++  {
++    std::vector<std::string> devices;
++    for (const auto& ap : deduped) {
++      if (std::ranges::find(devices, ap.devicePath) == devices.end()) {
++        devices.push_back(ap.devicePath);
++      }
      }
 -    if (ap.strength > it->strength) {
 -      it->strength = ap.strength;
@@ -60,18 +87,21 @@ diff -ru a/src/dbus/network/network_manager_service.cpp b/src/dbus/network/netwo
 -      it->devicePath = ap.devicePath;
 -      it->secured = ap.secured;
 -      it->keyManagement = ap.keyManagement;
-+    if (ap.active || (!it->active && ap.strength > it->strength)) {
-+      *it = std::move(ap);
++    if (devices.size() < 2U) {
++      for (auto& ap : deduped) {
++        ap.deviceName.clear();
++      }
      }
    }
    std::ranges::sort(deduped, [](const AccessPointInfo& a, const AccessPointInfo& b) {
 diff -ru a/src/dbus/network/network_types.h b/src/dbus/network/network_types.h
 --- a/src/dbus/network/network_types.h	2026-10-11 11:31:19.952249102 +0900
-+++ b/src/dbus/network/network_types.h	2026-10-11 11:31:20.033013402 +0900
-@@ -9,6 +9,8 @@
++++ b/src/dbus/network/network_types.h	2026-10-11 11:56:34.266462267 +0900
+@@ -9,6 +9,9 @@
    std::string path;       // Backend access point object path.
    std::string devicePath; // Backend device object path this AP belongs to.
    std::string ssid;
++  std::string deviceName;        // Interface (wlo1, wlan0, ...); set only when several Wi-Fi adapters exist.
 +  std::string bssid;             // Hardware address of this access point; the list shows every one.
 +  std::uint32_t frequency = 0;   // MHz (2412, 5180, 5955, ...); 0 when unknown.
    std::uint8_t strength = 0; // 0..100
@@ -79,8 +109,8 @@ diff -ru a/src/dbus/network/network_types.h b/src/dbus/network/network_types.h
    // How the AP wants to be authenticated, derived from its RSN flags. Drives both
 diff -ru a/src/shell/control_center/tabs/network_tab.cpp b/src/shell/control_center/tabs/network_tab.cpp
 --- a/src/shell/control_center/tabs/network_tab.cpp	2026-10-11 11:31:19.959017203 +0900
-+++ b/src/shell/control_center/tabs/network_tab.cpp	2026-10-11 11:31:20.034246949 +0900
-@@ -217,6 +217,19 @@
++++ b/src/shell/control_center/tabs/network_tab.cpp	2026-10-11 12:06:13.763250849 +0900
+@@ -217,6 +217,27 @@
    // Active first, then by signal band, then by name. Ordering on the raw strength —
    // as the services do — reshuffles rows on every scan update, moving the row you are
    // aiming at out from under the pointer.
@@ -97,10 +127,18 @@ diff -ru a/src/shell/control_center/tabs/network_tab.cpp b/src/shell/control_cen
 +    return std::string(band) + " · ch " + std::to_string(channel);
 +  }
 +
++  std::string apLabel(const AccessPointInfo& ap) {
++    std::string text = ap.ssid;
++    if (const std::string band = bandLabel(ap.frequency); !band.empty()) {
++      text += "  ·  " + band;
++    }
++    return text;
++  }
++
    std::vector<AccessPointInfo> sortedAccessPoints(std::vector<AccessPointInfo> aps) {
      std::ranges::sort(aps, [](const AccessPointInfo& a, const AccessPointInfo& b) {
        if (a.active != b.active) {
-@@ -227,7 +240,10 @@
+@@ -227,7 +248,13 @@
        if (bandA != bandB) {
          return bandA > bandB;
        }
@@ -108,29 +146,32 @@ diff -ru a/src/shell/control_center/tabs/network_tab.cpp b/src/shell/control_cen
 +      if (a.ssid != b.ssid) {
 +        return a.ssid < b.ssid;
 +      }
-+      return a.frequency < b.frequency;
++      if (a.frequency != b.frequency) {
++        return a.frequency < b.frequency;
++      }
++      return a.deviceName < b.deviceName;
      });
      return aps;
    }
-@@ -262,7 +278,7 @@
+@@ -262,7 +289,7 @@
      addChild(
          ui::label({
              .out = &m_title,
 -            .text = m_ap.ssid,
-+            .text = bandLabel(m_ap.frequency).empty() ? m_ap.ssid : m_ap.ssid + "  ·  " + bandLabel(m_ap.frequency),
++            .text = apLabel(m_ap),
              .fontSize = Style::fontSizeBody * scale,
              .fontWeight = m_ap.active ? FontWeight::Bold : FontWeight::Normal,
              .color = colorSpecFromRole(ColorRole::OnSurface),
-@@ -349,6 +365,8 @@
+@@ -349,6 +376,8 @@
    void doArrange(Renderer& renderer, const LayoutRect& rect) override { arrangeByLayout(renderer, rect); }
  
    [[nodiscard]] const std::string& ssid() const noexcept { return m_ap.ssid; }
 +  // Rows are keyed by access point, not name: one SSID can appear several times.
-+  [[nodiscard]] const std::string& key() const noexcept { return m_ap.bssid.empty() ? m_ap.path : m_ap.bssid; }
++  [[nodiscard]] const std::string& key() const noexcept { return m_ap.path; }
  
    // Refresh the values that move while a scan runs — the signal glyph and percent.
    // Everything else about the row is structural and belongs to the list key.
-@@ -1362,7 +1380,7 @@
+@@ -1362,10 +1391,45 @@
            );
            auto* rowPtr = row.get();
            parent.addChild(std::move(row));
@@ -139,12 +180,50 @@ diff -ru a/src/shell/control_center/tabs/network_tab.cpp b/src/shell/control_cen
          }
        };
  
-@@ -1545,7 +1563,7 @@
++      // With several Wi-Fi adapters each one gets its own section (named after the interface), so
++      // a network is joined by the adapter whose section it is clicked in.
++      if (!aps.empty() && !aps.front().deviceName.empty()) {
++        std::vector<std::string> names;
++        for (const auto& ap : aps) {
++          if (std::ranges::find(names, ap.deviceName) == names.end()) {
++            names.push_back(ap.deviceName);
++          }
++        }
++        std::ranges::sort(names);
++        for (const auto& name : names) {
++          std::vector<AccessPointInfo> own;
++          for (const auto& ap : aps) {
++            if (ap.deviceName == name) {
++              own.push_back(ap);
++            }
++          }
++          std::string title = name;
++          for (const auto& ap : own) {
++            if (ap.active) {
++              title += "  ·  " + ap.ssid;
++              break;
++            }
++          }
++          auto group = ui::column({
++              .align = FlexAlign::Stretch,
++              .gap = Style::spaceXs * scale,
++          });
++          group->addChild(makeWifiBucketHeaderRow(title, scale));
++          addRows(*group, own);
++          container->addChild(std::move(group));
++        }
++        return container;
++      }
++
+       addRows(*container, activeAps);
+ 
+       auto addBucket = [&](const std::string& title, const std::vector<AccessPointInfo>& bucket) {
+@@ -1545,7 +1609,7 @@
    }
    bool changed = false;
    for (const auto& ap : m_network->accessPoints()) {
 -    const auto it = m_apRows.find(ap.ssid);
-+    const auto it = m_apRows.find(ap.bssid.empty() ? ap.path : ap.bssid);
++    const auto it = m_apRows.find(ap.path);
      if (it != m_apRows.end() && it->second->syncLiveMetrics(ap)) {
        changed = true;
      }

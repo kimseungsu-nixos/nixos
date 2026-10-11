@@ -39,8 +39,8 @@ sudo nixos-rebuild switch --flake .#linux
   Fusion's floating panels. The Arc card renders the 3D view; `FUSION_GPU=igpu` selects the
   integrated one, `FUSION_DXVK_HUD=fps,devinfo` shows a frame-rate overlay.
 - Noctalia's Wi-Fi list is patched (`patches/noctalia-ap-list.patch`, wired in `home/noctalia-ap-list.nix`): every
-  access point is a row with its band and channel, so a network served by several APs (2.4/5 GHz, mesh)
-  is no longer merged into one. This builds Noctalia from source; drop the module to use the cache again.
+  access point is a row with its band and channel, in one section per Wi-Fi adapter, so a network served
+  by several APs (2.4/5 GHz, mesh) is no longer merged into one and each adapter can join its own network. This builds Noctalia from source; drop the module to use the cache again.
 - The monitor is set to 3440x1440@100 in `home/niri.nix`; its default 50 Hz mode makes the
   pointer and windows trail visibly. `ntsync` is loaded for Wine's thread synchronisation.
 
