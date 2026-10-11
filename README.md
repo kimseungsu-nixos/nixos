@@ -45,7 +45,7 @@ sudo nixos-rebuild switch --flake .#linux
   pointer and windows trail visibly. `ntsync` is loaded for Wine's thread synchronisation.
 
 WPILib VMX 2020 runs natively: WPILibInstaller-Avalonia installs the tree into `~/wpilib/2020_vmx`, and
-the `wpilib-vmx` package from nix-packages (`home/wpilib-vmx.nix`) starts it in an FHS environment
+the `wpilib2020-vmx` package of the `nix-frc2020-vmx` input (`home/wpilib-vmx.nix`) starts it in an FHS environment
 (`wpilibcode2020_vmx`, `wpilib-elastic`, `wpilib-shell`; menu entries "WPILib VS Code 2020_vmx" and
 "WPILib Elastic NT3 2020_vmx"). The old Ubuntu distrobox container (`scripts/nixos-distrobox.sh` in the
 installer repo) is no longer needed; podman and distrobox stay installed.

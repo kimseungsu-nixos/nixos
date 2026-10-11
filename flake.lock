@@ -177,11 +177,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791695391,
-        "narHash": "sha256-8E5Oj3xqxYp+b0NQctmd+OsrmOW1eWUNHRaI8ulXXhc=",
+        "lastModified": 1791697128,
+        "narHash": "sha256-Cw9hUsIXiMrYvb+8WfWrXIxIjz9Rbd8sKYqkPEH1zcM=",
         "ref": "refs/heads/main",
-        "rev": "37a94e74909ba5dae49d0c7870dd06cdaa8862be",
-        "revCount": 37,
+        "rev": "e30f007cdef45984fe77d5541e2b6c2373e94167",
+        "revCount": 38,
         "type": "git",
         "url": "https://github.com/VMX-WPILib-2020-Archive/nix-frc2020-vmx.git"
       },
@@ -200,11 +200,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791606939,
-        "narHash": "sha256-0P/iaRn7pj0eIGltfXWdwfPKQQ6HDiBwfV9x778N1X0=",
+        "lastModified": 1791697157,
+        "narHash": "sha256-Mzi9v3RVCUVyLlcsatfOap+tqg/wGpPLtbwfwVxcBbM=",
         "ref": "refs/heads/main",
-        "rev": "147035ff2dad849308efef619e6d7a69cf58e03f",
-        "revCount": 76,
+        "rev": "96417b3666809ee6417b1582696b1882a3b28f69",
+        "revCount": 77,
         "type": "git",
         "url": "https://github.com/kimseungsu-zzz/nix-packages"
       },
