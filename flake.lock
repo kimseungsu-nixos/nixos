@@ -416,11 +416,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791701438,
-        "narHash": "sha256-S+mmuVYo63vBjXx7p8rs7b328YhtfkL0ropzbbn/UWM=",
+        "lastModified": 1791702436,
+        "narHash": "sha256-fg9UzBFRJDsmhrJRctpdrQWIwwzSeiQWP5YxcQ8UZ9Y=",
         "ref": "refs/heads/2027",
-        "rev": "6352d1da66ae83ca795241ee5fa7d962fdbcda91",
-        "revCount": 215,
+        "rev": "d3f774b7a3757c4f0134ba97beecdbf4065f0575",
+        "revCount": 216,
         "type": "git",
         "url": "https://github.com/W4Studica/wpi2027-nix.git"
       },
