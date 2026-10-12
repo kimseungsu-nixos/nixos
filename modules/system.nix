@@ -44,14 +44,12 @@
     serviceConfig.TimeoutStopSec = "15s";
   };
   networking.networkmanager.enable = true;
-  # NetworkManager ranks Ethernet (metric 100) above Wi-Fi (600), so plugging in a cable to a
-  # network without internet (a robot's direct link, a switch) took the default route from the
-  # working Wi-Fi and cut the connection. Wi-Fi now wins while it is up; with only the cable
-  # plugged in, the cable is still the route.
+  # NetworkManager ranks Ethernet (metric 100) above Wi-Fi (600). Both get the same metric here, so
+  # neither takes the default route from the other just because of its type.
   networking.networkmanager.settings."connection-ethernet" = {
     "match-device" = "type:ethernet";
-    "ipv4.route-metric" = 700;
-    "ipv6.route-metric" = 700;
+    "ipv4.route-metric" = 600;
+    "ipv6.route-metric" = 600;
   };
 
   time.timeZone = "Asia/Seoul";
