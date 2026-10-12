@@ -8,6 +8,13 @@
 
   home.stateVersion = "26.05";
 
+  # Fusion 360: Bottles manages the Wine/Proton profiles; the niri part floats and
+  # centers Fusion's dialogs and writes ~/.config/niri/fusion360.kdl (included from niri.nix).
+  programs.fusion360 = {
+    enable = true;
+    niri.enable = true;
+  };
+
   # Seed the OBS profile and scene collection once on new installations. Copying only missing
   # files keeps OBS settings writable and preserves changes made later in the app.
   home.activation.seedObsStudioConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -80,6 +87,16 @@
   # so the default is set in place instead of through xdg.mimeApps.
   home.activation.defaultFileManager = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     $DRY_RUN_CMD ${pkgs.xdg-utils}/bin/xdg-mime default thunar.desktop inode/directory
+  '';
+
+  # Archives open in Xarchiver (zip, 7z, rar, tar and friends).
+  home.activation.defaultArchiver = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    for type in application/zip application/x-7z-compressed application/vnd.rar application/x-rar \
+        application/x-tar application/gzip application/x-compressed-tar application/x-bzip2 \
+        application/x-bzip-compressed-tar application/x-xz application/x-xz-compressed-tar \
+        application/zstd application/x-zstd-compressed-tar application/x-iso9660-image; do
+      $DRY_RUN_CMD ${pkgs.xdg-utils}/bin/xdg-mime default xarchiver.desktop "$type"
+    done
   '';
 
   # foot for Thunar's "Open Terminal Here".

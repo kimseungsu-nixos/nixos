@@ -85,6 +85,8 @@ in
     plugins = with pkgs; [ thunar-volman thunar-archive-plugin ];
   };
   services.tumbler.enable = true;
+  # Thunar's archive menu (extract here, compress...) runs Xarchiver through the .tap file it ships.
+  environment.pathsToLink = [ "/libexec/thunar-archive-plugin" ];
 
   # Ventoy is flagged insecure in nixpkgs: its prebuilt boot images and tools are binary blobs
   # that cannot be audited (https://github.com/NixOS/nixpkgs/issues/404663). Only Ventoy is
@@ -103,7 +105,14 @@ in
     python3
     rpiImager   # Raspberry Pi Imager, always as root
     ventoy-full-gtk  # bootable USB creator (run with sudo or via polkit)
+    # Archives: Xarchiver is the GUI; the others are what it calls. unar copes with legacy Korean
+    # (CP949) file names in zip files, which 7-Zip and unzip turn into garbage.
+    xarchiver
+    zip
     unzip
+    p7zip
+    unrar
+    unar
     ntfs3g
     dosfstools
     exfatprogs
