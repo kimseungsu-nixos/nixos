@@ -88,6 +88,26 @@ in
   # Thunar's archive menu (extract here, compress...) runs Xarchiver through the .tap file it ships.
   environment.pathsToLink = [ "/libexec/thunar-archive-plugin" ];
 
+  # Roblox through Sober, the Linux client (Flatpak only, not in nixpkgs). A boot-time job adds
+  # Flathub and installs or updates Sober; it needs the network and does nothing when offline.
+  # Start it from the menu ("Sober") or with `flatpak run org.vinegarhq.Sober`.
+  services.flatpak.enable = true;
+  systemd.services.flatpak-sober = {
+    description = "Install Sober (Roblox) from Flathub";
+    wantedBy = [ "multi-user.target" ];
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" ];
+    path = [ pkgs.flatpak ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+      flatpak install --system --noninteractive --or-update flathub org.vinegarhq.Sober
+    '';
+  };
+
   # Ventoy is flagged insecure in nixpkgs: its prebuilt boot images and tools are binary blobs
   # that cannot be audited (https://github.com/NixOS/nixpkgs/issues/404663). Only Ventoy is
   # allowed through; any other insecure package is still refused.

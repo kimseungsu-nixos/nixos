@@ -35,6 +35,9 @@ sudo nixos-rebuild switch --flake .#linux
 - Noctalia's Wi-Fi list is patched (`patches/noctalia-ap-list.patch`, wired in `home/noctalia-ap-list.nix`): every
   access point is a row with its band and channel, in one section per Wi-Fi adapter, so a network served
   by several APs (2.4/5 GHz, mesh) is no longer merged into one and each adapter can join its own network. This builds Noctalia from source; drop the module to use the cache again.
+- Roblox runs through Sober, the Linux client from Flathub: `services.flatpak` plus a boot-time job
+  (`flatpak-sober`, `modules/apps.nix`) that installs and updates it. Start it from the menu ("Sober")
+  or `flatpak run org.vinegarhq.Sober`. The first start downloads Roblox itself.
 - The monitor is set to 3440x1440@100 in `home/niri.nix`; its default 50 Hz mode makes the
   pointer and windows trail visibly. `ntsync` is loaded for Wine's thread synchronisation.
 
