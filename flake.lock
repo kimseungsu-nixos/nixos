@@ -190,6 +190,26 @@
         "url": "https://github.com/VMX-WPILib-2020-Archive/nix-frc2020-vmx.git"
       }
     },
+    "nix-fusion360": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791954043,
+        "narHash": "sha256-kBi9Nm+u6Sq4oDn7Aw/b+4j9Vpx5y4urnfKX24MGDAw=",
+        "ref": "refs/heads/main",
+        "rev": "e4790b3a8b9f640531f273582c0a16f9a8a2d12e",
+        "revCount": 30,
+        "type": "git",
+        "url": "https://github.com/kimseungsu-zzz/nix-fusion360"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://github.com/kimseungsu-zzz/nix-fusion360"
+      }
+    },
     "nix-github-actions": {
       "inputs": {
         "nixpkgs": [
@@ -371,6 +391,7 @@
         "hnc2020": "hnc2020",
         "home-manager": "home-manager",
         "nix-frc2020-vmx": "nix-frc2020-vmx",
+        "nix-fusion360": "nix-fusion360",
         "nix-packages": "nix-packages",
         "nixpkgs": "nixpkgs_4",
         "noctalia": "noctalia",

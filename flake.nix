@@ -52,6 +52,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Fusion 360 helpers: Bottles plus niri window rules and the dialog-fixing daemon.
+    nix-fusion360 = {
+      url = "git+https://github.com/kimseungsu-zzz/nix-fusion360";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Home Manager desktop and application configuration.
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
@@ -59,7 +65,7 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, wpi2027-nix, codex-desktop-linux, claude-desktop, zen-browser, noctalia, home-manager, ... }: {
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, wpi2027-nix, codex-desktop-linux, claude-desktop, zen-browser, noctalia, home-manager, nix-fusion360, ... }: {
     # nixos-rebuild switch --flake .#linux
     # `nixos` is an alias: nixos-rebuild looks up the *current* hostname.
     nixosConfigurations = rec {
@@ -81,7 +87,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx wpi2027-nix; };
+              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx wpi2027-nix nix-fusion360; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";
@@ -91,6 +97,7 @@
                 ./home/wpilib-2027.nix
                 zen-browser.homeModules.beta
                 noctalia.homeModules.default
+                nix-fusion360.homeManagerModules.default
               ];
               users.linux = import ./home.nix;
             };
