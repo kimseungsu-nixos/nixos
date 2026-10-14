@@ -13,6 +13,7 @@ in
     spotify
     vlc
     kicad
+    godot    # Godot 4 game engine
     xwayland-satellite
     alsa-utils
     brightnessctl
