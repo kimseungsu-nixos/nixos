@@ -23,7 +23,45 @@ let
   wpilibCode = pkgs.writeShellScriptBin "wpilibcode2027" ''
     export JAVA_HOME="${pkgs.jdk25}"
     export PATH="$JAVA_HOME/bin:$PATH"
-    exec ${vscodeWpilib}/bin/code --user-data-dir "''${XDG_CONFIG_HOME:-$HOME/.config}/wpilib-code-2027" "$@"
+    extensionsDir="''${XDG_CONFIG_HOME:-$HOME/.config}/wpilib-code-2027/extensions"
+    mkdir -p "$extensionsDir"
+
+    # vscode-with-extensions normally points --extensions-dir at its immutable
+    # Nix store output. Mirror its bundled extensions into the writable profile
+    # so users can install and update additional extensions alongside WPILib.
+    bundledExtensionsDir="$(sed -n 's|^exec .* --extensions-dir \([^ ]*\) "\$@" *$|\1|p' "${vscodeWpilib}/bin/code")"
+    if [ -z "$bundledExtensionsDir" ] || [ ! -d "$bundledExtensionsDir" ]; then
+      echo "Could not locate the bundled WPILib VS Code extensions" >&2
+      exit 1
+    fi
+    for extension in "$bundledExtensionsDir/"*; do
+      extensionName="$(basename "$extension")"
+      [ "$extensionName" = "extensions.json" ] && continue
+      destination="$extensionsDir/$extensionName"
+      if [ -L "$destination" ]; then
+        ln -sfn "$extension" "$destination"
+      elif [ ! -e "$destination" ]; then
+        ln -s "$extension" "$destination"
+      fi
+    done
+
+    # Keep Nix-bundled extensions visible to VS Code while preserving extensions
+    # installed by the user in this writable profile.
+    bundledMetadata="$bundledExtensionsDir/extensions.json"
+    userMetadata="$extensionsDir/extensions.json"
+    if [ -f "$userMetadata" ]; then
+      "${pkgs.jq}/bin/jq" -s \
+        '.[0] + .[1] | reduce .[] as $extension ({}; .[$extension.identifier.id] = $extension) | [.[]]' \
+        "$bundledMetadata" "$userMetadata" > "$extensionsDir/extensions.json.tmp"
+      mv "$extensionsDir/extensions.json.tmp" "$userMetadata"
+    else
+      cp "$bundledMetadata" "$userMetadata"
+    fi
+
+    exec ${vscodeWpilib}/bin/code \
+      --user-data-dir "''${XDG_CONFIG_HOME:-$HOME/.config}/wpilib-code-2027" \
+      --extensions-dir "$extensionsDir" \
+      "$@"
   '';
 
   wpilibCodeItem = pkgs.makeDesktopItem {
