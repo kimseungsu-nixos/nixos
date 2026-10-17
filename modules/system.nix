@@ -44,6 +44,8 @@
     serviceConfig.TimeoutStopSec = "15s";
   };
   networking.networkmanager.enable = true;
+  # Keep Wi-Fi at full power on every NetworkManager connection.
+  networking.networkmanager.wifi.powersave = false;
   # NetworkManager ranks Ethernet (metric 100) above Wi-Fi (600). Both get the same metric here, so
   # neither takes the default route from the other just because of its type.
   networking.networkmanager.settings."connection-ethernet" = {
