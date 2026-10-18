@@ -11,6 +11,12 @@
     # Matches system.stateVersion in configuration.nix.
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
+    # SolidCraft parametric 3D CAD application (desktop and CLI).
+    solidcraft = {
+      url = "github:tangency-labs/solidcraft";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Hancom Office 2020 (private repo, fetched with the `gh auth login` credentials like the other
     # private inputs). Only the package definition lives there; the installer is downloaded by the
     # build from a pinned URL. It brings its own nixpkgs pins (the app needs 19.09 libraries).
@@ -65,7 +71,7 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, wpi2027-nix, codex-desktop-linux, claude-desktop, zen-browser, noctalia, home-manager, nix-fusion360, ... }: {
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, wpi2027-nix, codex-desktop-linux, claude-desktop, zen-browser, noctalia, home-manager, nix-fusion360, solidcraft, ... }: {
     # nixos-rebuild switch --flake .#linux
     # `nixos` is an alias: nixos-rebuild looks up the *current* hostname.
     nixosConfigurations = rec {
@@ -87,7 +93,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx wpi2027-nix nix-fusion360; };
+              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx wpi2027-nix nix-fusion360 solidcraft; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";

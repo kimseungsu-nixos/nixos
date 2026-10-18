@@ -395,8 +395,29 @@
         "nix-packages": "nix-packages",
         "nixpkgs": "nixpkgs_4",
         "noctalia": "noctalia",
+        "solidcraft": "solidcraft",
         "wpi2027-nix": "wpi2027-nix",
         "zen-browser": "zen-browser"
+      }
+    },
+    "solidcraft": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792281860,
+        "narHash": "sha256-Ncbz4ohHKjAOOMQMsPjDVXu1raS0fvXk2At0uguCVcM=",
+        "owner": "tangency-labs",
+        "repo": "solidcraft",
+        "rev": "dc40f051b1fc258d49f03452f3d5efa540b5121c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tangency-labs",
+        "repo": "solidcraft",
+        "type": "github"
       }
     },
     "systems": {

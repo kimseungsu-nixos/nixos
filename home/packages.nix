@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, solidcraft, ... }:
 let
   # Puts an image on the clipboard as PNG and BMP (Wine programs paste the BMP).
   copyImage = pkgs.callPackage ./copy-image { };
@@ -12,6 +12,8 @@ in
     brave
     spotify
     vlc
+    putty
+    solidcraft.packages.${pkgs.stdenv.hostPlatform.system}.solidcraft
     kicad
     arduino-ide
     godot    # Godot 4 game engine
