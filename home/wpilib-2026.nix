@@ -28,7 +28,18 @@ let
       extensionName="$(basename "$extension")"
       [ "$extensionName" = "extensions.json" ] && continue
       destination="$extensionsDir/$extensionName"
-      if [ -L "$destination" ]; then
+      if [ "''${extensionName#wpilibsuite.vscode-wpilib-}" != "$extensionName" ]; then
+        # WPILib rewrites project files after copying a template. The Nix store
+        # makes those source directories read-only, and its copy preserves
+        # that mode, so give the project copy a writable extension source.
+        if [ -L "$destination" ]; then
+          rm "$destination"
+        fi
+        if [ ! -e "$destination" ]; then
+          cp -RL "$extension" "$destination"
+        fi
+        chmod -R u+rwX "$destination/resources"
+      elif [ -L "$destination" ]; then
         ln -sfn "$extension" "$destination"
       elif [ ! -e "$destination" ]; then
         ln -s "$extension" "$destination"
