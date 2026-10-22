@@ -114,6 +114,7 @@
               sharedModules = [
                 ./home/noctalia-ap-list.nix
                 ./home/wpilib-vmx.nix
+                ./home/wpilib-2026.nix
                 ./home/wpilib-2027.nix
                 zen-browser.homeModules.beta
                 noctalia.homeModules.default
