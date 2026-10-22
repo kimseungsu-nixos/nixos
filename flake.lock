@@ -73,6 +73,67 @@
         "type": "github"
       }
     },
+    "flake-utils_3": {
+      "inputs": {
+        "systems": "systems_3"
+      },
+      "locked": {
+        "lastModified": 1710146030,
+        "narHash": "sha256-SZ5L6eA7HJ/nmkzGG7/ISclqe6oZdOZTNoesiInkXPQ=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "b1d9ab70662946ef0850d488da1c9019f3a9752a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "frc-nix": {
+      "inputs": {
+        "nix-github-actions": "nix-github-actions",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1789476793,
+        "narHash": "sha256-UIkQX/1dtjLJd14F88bOB6HSonQmqezch09WVA8Px+4=",
+        "owner": "frc4451",
+        "repo": "frc-nix",
+        "rev": "11fb42f3052cad3154c7ce0350df66f35c28e11e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "frc4451",
+        "ref": "season/2026",
+        "repo": "frc-nix",
+        "type": "github"
+      }
+    },
+    "frc2023-nix": {
+      "inputs": {
+        "flake-utils": "flake-utils_2",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792464059,
+        "narHash": "sha256-axyqEb3JTY1uZ+6OfqZazXRel9u3yZ6w9kPYKTODG2Y=",
+        "owner": "kimseungsu-zzz",
+        "repo": "frc2023-nix",
+        "rev": "53a532b8041d9404c2c8b8474df40b3c9c0a0999",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kimseungsu-zzz",
+        "repo": "frc2023-nix",
+        "type": "github"
+      }
+    },
     "hnc2020": {
       "inputs": {
         "nixpkgs": "nixpkgs_3",
@@ -171,7 +232,7 @@
     },
     "nix-frc2020-vmx": {
       "inputs": {
-        "flake-utils": "flake-utils_2",
+        "flake-utils": "flake-utils_3",
         "nixpkgs": [
           "nixpkgs"
         ]
@@ -211,6 +272,27 @@
       }
     },
     "nix-github-actions": {
+      "inputs": {
+        "nixpkgs": [
+          "frc-nix",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1737420293,
+        "narHash": "sha256-F1G5ifvqTpJq7fdkT34e/Jy9VCyzd5XfJ9TO8fHhJWE=",
+        "owner": "nix-community",
+        "repo": "nix-github-actions",
+        "rev": "f4158fa080ef4503c8f4c820967d946c2af31ec9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nix-github-actions",
+        "type": "github"
+      }
+    },
+    "nix-github-actions_2": {
       "inputs": {
         "nixpkgs": [
           "wpi2027-nix",
@@ -388,6 +470,8 @@
       "inputs": {
         "claude-desktop": "claude-desktop",
         "codex-desktop-linux": "codex-desktop-linux",
+        "frc-nix": "frc-nix",
+        "frc2023-nix": "frc2023-nix",
         "hnc2020": "hnc2020",
         "home-manager": "home-manager",
         "nix-frc2020-vmx": "nix-frc2020-vmx",
@@ -450,9 +534,24 @@
         "type": "github"
       }
     },
+    "systems_3": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
     "wpi2027-nix": {
       "inputs": {
-        "nix-github-actions": "nix-github-actions",
+        "nix-github-actions": "nix-github-actions_2",
         "nixpkgs": [
           "nixpkgs"
         ]

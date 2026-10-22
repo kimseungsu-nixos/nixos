@@ -73,16 +73,7 @@ let
   };
 in
 {
-  home.packages = (with wpi; [
-    datalogtool
-    glass
-    outlineviewer
-    sysid
-    wpical
-    wpilib-utility
-    advantagescope
-    choreo
-    pathplanner
-    elastic-dashboard
-  ]) ++ [ wpilibCode wpilibCodeItem pkgs.jdk25 ];
+  # The 2027 IDE remains available; shared desktop tools come from the 2026 suite to avoid
+  # duplicate executable names in the Home Manager profile.
+  home.packages = [ wpilibCode wpilibCodeItem pkgs.jdk25 ];
 }
