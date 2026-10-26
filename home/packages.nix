@@ -1,4 +1,4 @@
-{ pkgs, solidcraft, frc2023-nix, ... }:
+{ pkgs, solidcraft, ... }:
 let
   # Puts an image on the clipboard as PNG and BMP (Wine programs paste the BMP).
   copyImage = pkgs.callPackage ./copy-image { };
@@ -25,12 +25,6 @@ in
     wpilib.sysid
     wpilib.wpical
     wpilib.wpilib-utility
-    # Keep these legacy FRC 2023 tools alongside the 2026 suite.
-    frc2023-nix.packages.${pkgs.stdenv.hostPlatform.system}.pathweaver
-    frc2023-nix.packages.${pkgs.stdenv.hostPlatform.system}.roborioteamnumbersetter
-    frc2023-nix.packages.${pkgs.stdenv.hostPlatform.system}.robotbuilder
-    frc2023-nix.packages.${pkgs.stdenv.hostPlatform.system}.shuffleboard
-    frc2023-nix.packages.${pkgs.stdenv.hostPlatform.system}.smartdashboard
     kicad
     arduino-ide
     godot    # Godot 4 game engine
@@ -93,36 +87,6 @@ in
       name = "WPILib 2026 Utility";
       exec = "wpilib-utility";
       icon = "wpilib-utility";
-      categories = [ "Development" "Education" ];
-    };
-    wpilib-2023-pathweaver = {
-      name = "WPILib 2023 PathWeaver";
-      exec = "pathweaver";
-      icon = "PathWeaver";
-      categories = [ "Development" "Education" ];
-    };
-    wpilib-2023-team-number-setter = {
-      name = "WPILib 2023 RoboRIO Team Number Setter";
-      exec = "roborioteamnumbersetter";
-      icon = "roboRIOTeamNumberSetter";
-      categories = [ "Development" "Education" ];
-    };
-    wpilib-2023-robotbuilder = {
-      name = "WPILib 2023 RobotBuilder";
-      exec = "robotbuilder";
-      icon = "RobotBuilder";
-      categories = [ "Development" "Education" ];
-    };
-    wpilib-2023-shuffleboard = {
-      name = "WPILib 2023 Shuffleboard";
-      exec = "shuffleboard";
-      icon = "Shuffleboard";
-      categories = [ "Development" "Education" ];
-    };
-    wpilib-2023-smartdashboard = {
-      name = "WPILib 2023 SmartDashboard";
-      exec = "smartdashboard";
-      icon = "SmartDashboard";
       categories = [ "Development" "Education" ];
     };
   };

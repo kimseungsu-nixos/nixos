@@ -1,4 +1,4 @@
-# My-NixOS
+# NixOS
 
 NixOS flake for the `linux` machine: niri (scrollable-tiling Wayland compositor) with the
 Noctalia shell.

@@ -17,9 +17,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Hancom Office 2020 (private repo, fetched with the `gh auth login` credentials like the other
-    # private inputs). Only the package definition lives there; the installer is downloaded by the
-    # build from a pinned URL. It brings its own nixpkgs pins (the app needs 19.09 libraries).
+    # Hancom Office 2020 (private repo fetched with the configured GitHub credentials). Only the
+    # package definition lives there; the installer is downloaded by the build from a pinned URL.
+    # It brings its own nixpkgs pins for 19.09 libraries.
     hnc2020.url = "git+https://github.com/kimseungsu-zzz/nixos-HNC2020";
 
     # ChatGPT Community (unofficial Linux build of the ChatGPT/Codex desktop app). It keeps its
@@ -58,21 +58,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # WPILib 2023 desktop tools for legacy FRC robot projects.
-    frc2023-nix = {
-      url = "github:kimseungsu-zzz/frc2023-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # Maintained FRC desktop tools for the 2026 season.
     frc-nix = {
       url = "github:frc4451/frc-nix/season/2026";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    # Fusion 360 helpers: Bottles plus niri window rules and the dialog-fixing daemon.
-    nix-fusion360 = {
-      url = "git+https://github.com/kimseungsu-zzz/nix-fusion360";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -83,7 +71,7 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, wpi2027-nix, frc2023-nix, frc-nix, codex-desktop-linux, claude-desktop, zen-browser, noctalia, home-manager, nix-fusion360, solidcraft, ... }: {
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, wpi2027-nix, frc-nix, codex-desktop-linux, claude-desktop, zen-browser, noctalia, home-manager, solidcraft, ... }: {
     # nixos-rebuild switch --flake .#linux
     # `nixos` is an alias: nixos-rebuild looks up the *current* hostname.
     nixosConfigurations = rec {
@@ -91,7 +79,7 @@
         system = "x86_64-linux";
         modules = [
           ./configuration.nix
-          # Use only its package overlay; the 2023 packages are referenced directly from its flake.
+          # Use the maintained FRC package overlay.
           { nixpkgs.overlays = [ frc-nix.overlays.default ]; }
           codex-desktop-linux.nixosModules.default
           claude-desktop.nixosModules.default
@@ -107,7 +95,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx wpi2027-nix frc2023-nix nix-fusion360 solidcraft; };
+              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx wpi2027-nix solidcraft; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";
@@ -118,7 +106,6 @@
                 ./home/wpilib-2027.nix
                 zen-browser.homeModules.beta
                 noctalia.homeModules.default
-                nix-fusion360.homeManagerModules.default
               ];
               users.linux = import ./home.nix;
             };

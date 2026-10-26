@@ -8,13 +8,6 @@
 
   home.stateVersion = "26.05";
 
-  # Fusion 360: Bottles manages the Wine/Proton profiles; the niri part floats and
-  # centers Fusion's dialogs and writes ~/.config/niri/fusion360.kdl (included from niri.nix).
-  programs.fusion360 = {
-    enable = true;
-    niri.enable = true;
-  };
-
   # Seed the OBS profile and scene collection once on new installations. Copying only missing
   # files keeps OBS settings writable and preserves changes made later in the app.
   home.activation.seedObsStudioConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
