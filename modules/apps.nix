@@ -45,6 +45,9 @@ in
   # Claude Desktop (official Linux beta, unfree).
   programs.claude-desktop.enable = true;
 
+  # Oh My Pi terminal coding agent (command: omp).
+  programs.omp.enable = true;
+
   # OBS Studio (screen recording / streaming), with the virtual camera module.
   programs.obs-studio.enable = true;
 

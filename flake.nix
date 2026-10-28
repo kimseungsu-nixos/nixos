@@ -29,6 +29,9 @@
     # Claude Desktop (official Linux beta from Anthropic's apt repo, packaged for Nix).
     claude-desktop.url = "github:poeck/claude-desktop-nix-flake";
 
+    # Oh My Pi coding agent; keep upstream's toolchain pins for its native build.
+    omp.url = "github:can1357/oh-my-pi";
+
     # Zen Browser, packaged for Nix with a Home Manager module.
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
@@ -71,7 +74,7 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, wpi2027-nix, frc-nix, codex-desktop-linux, claude-desktop, zen-browser, noctalia, home-manager, solidcraft, ... }: {
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, wpi2027-nix, frc-nix, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, solidcraft, ... }: {
     # nixos-rebuild switch --flake .#linux
     # `nixos` is an alias: nixos-rebuild looks up the *current* hostname.
     nixosConfigurations = rec {
@@ -83,6 +86,7 @@
           { nixpkgs.overlays = [ frc-nix.overlays.default ]; }
           codex-desktop-linux.nixosModules.default
           claude-desktop.nixosModules.default
+          omp.nixosModules.default
           hnc2020.nixosModules.default
           nix-packages.nixosModules.studica-hardware-manager
           nix-packages.nixosModules.titan-config
