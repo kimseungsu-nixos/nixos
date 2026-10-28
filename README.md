@@ -30,6 +30,16 @@ sudo nixos-rebuild switch --flake .#linux
 - Screenshots (`Print`, `Mod+Shift+S`) go to `~/Pictures/Screenshots` and onto the clipboard as
   PNG and BMP plus the file itself (`home/copy-image`), so they paste into Wine programs and
   file managers too.
+- Kime's XIM bridge runs as `kime-xim.service` (`home/kime.nix`), separately from its Wayland
+  frontend, and automatically reconnects after an XWayland restart.
+- KakaoTalk uses a patched `xwayland-satellite` (`home/xwayland-satellite.nix`) so its
+  custom-framed profile, chat and settings dialogs stay open as normal windows; menus and
+  tooltips remain popups. Focusing or moving KakaoTalk also keeps the XRandR primary output
+  stable, including fallback focus on the invisible tray container after closing a chat:
+  changing it makes KakaoTalk unmap its main window. The user launcher (`home/kakaotalk-launcher.nix`) restores the
+  existing window instead of toggling its visibility or killing its Wine prefix on every launch.
+  Untitled toast windows use the measured 387×161 size at the bottom-right without taking focus;
+  this prevents their 1×1 animation hints from trapping the notification body at 1×1.
 - X11 tray icons (KakaoTalk under Wine) reach Noctalia through KDE's `xembedsniproxy`, built on
   its own and run as a user service (`home/xembedsniproxy`).
 - Noctalia's Wi-Fi list is patched (`patches/noctalia-ap-list.patch`, wired in `home/noctalia-ap-list.nix`): every

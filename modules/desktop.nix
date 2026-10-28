@@ -74,7 +74,8 @@
   i18n.inputMethod = {
     enable = true;
     type = lib.mkForce "kime";
-    kime.daemonModules = [ "Xim" "Wayland" "Indicator" ];
+    # home/kime.nix supervises XIM separately so it reconnects after XWayland exits.
+    kime.daemonModules = [ "Wayland" "Indicator" ];
     kime.iconColor = "White";
     kime.extraConfig = ''
       engine:

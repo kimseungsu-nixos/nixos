@@ -1,0 +1,85 @@
+diff --git a/src/xstate/mod.rs b/src/xstate/mod.rs
+index 6f08eb9..c4b3f5e 100644
+--- a/src/xstate/mod.rs
++++ b/src/xstate/mod.rs
+@@ -1158,6 +1158,19 @@ impl WindowRoleHeuristics {
+             return WindowRole::Popup;
+         }
+ 
++        // KakaoTalk temporarily pins dialog sizes while mapping its custom-framed
++        // profile, chat and settings windows. They are persistent windows, not
++        // dismissable popups. Keep override-redirect tooltips/menus on the path above.
++        if self.wm_class.as_deref() == Some("kakaotalk.exe")
++            && self.has_transient_for
++            && self.window_types.contains(&window_atoms.dialog)
++            && self.motif_wm_hints.is_some_and(|h| {
++                h.functions.is_some_and(|f| f.contains(motif::Functions::Close))
++            })
++        {
++            return WindowRole::Toplevel;
++        }
++
+         let mut motif_no_decor = false;
+         if let Some(hints) = self.motif_wm_hints {
+             motif_no_decor = hints.decorations.is_some_and(|d| d.is_clientside());
+@@ -1407,6 +1420,27 @@ impl XConnection for RealConnection {
+             debug!("ChangeProperty failed ({window:?}: {e:?})");
+         }
+ 
++        // Changing XRandR's primary output broadcasts a Windows display change.
++        // KakaoTalk responds by unmapping its main window during a monitor move.
++        // Keep the primary output stable while focusing/moving KakaoTalk windows.
++        // The invisible tray container can receive fallback focus when a chat closes;
++        // it must not switch the primary output and hide the main window either.
++        let cookie = self.connection.send_request(&x::GetProperty {
++            window,
++            delete: false,
++            property: x::ATOM_WM_CLASS,
++            r#type: x::ATOM_STRING,
++            long_offset: 0,
++            long_length: 256,
++        });
++        if let Ok(reply) = self.connection.wait_for_reply(cookie) {
++            if reply.value::<u8>().split(|b| *b == 0).any(|s| {
++                s == b"kakaotalk.exe" || s == b"xembedsniproxy"
++            }) {
++                return;
++            }
++        }
++
+         if let Some(name) = output_name {
+             let Some(output) = self.outputs.get(&name).copied() else {
+                 warn!("Couldn't find output {name}, primary output will be wrong");
+diff --git a/src/xstate/tests.rs b/src/xstate/tests.rs
+index d59099c..4a5e5c5 100644
+--- a/src/xstate/tests.rs
++++ b/src/xstate/tests.rs
+@@ -113,6 +113,28 @@ mod window_role_heuristics {
+         assert_eq!(win.guess_window_role(&win_types), WindowRole::Toplevel);
+     }
+ 
++    #[test]
++    fn kakaotalk_dialog_and_tooltip() {
++        let win_types = WindowTypes::new();
++        let mut win = WindowRoleHeuristics {
++            window_types: vec![win_types.dialog],
++            has_transient_for: true,
++            motif_wm_hints: Some(motif::Hints::from([3_u32, 0x24, 0, 0, 0].as_slice())),
++            wm_normal_hints: Some(WmNormalHints::new().min_size(375, 750).max_size(375, 750).into()),
++            wm_class: Some("kakaotalk.exe".into()),
++            ..Default::default()
++        };
++        assert_eq!(win.guess_window_role(&win_types), WindowRole::Toplevel);
++        win.override_redirect = true;
++        assert_eq!(win.guess_window_role(&win_types), WindowRole::Popup);
++        win.override_redirect = false;
++        // KakaoTalkShadowWnd has only Move, and must remain a popup.
++        win.motif_wm_hints = Some(motif::Hints::from([3_u32, 4, 0, 0, 0].as_slice()));
++        assert_eq!(win.guess_window_role(&win_types), WindowRole::Popup);
++        win.motif_wm_hints = Some(motif::Hints::from([3_u32, 0, 0, 0, 0].as_slice()));
++        assert_eq!(win.guess_window_role(&win_types), WindowRole::Popup);
++    }
++
+     // https://github.com/Supreeeme/xwayland-satellite/issues/110
+     // Popup because _MOTIF_WM_HINTS indicates user cannot interact which the window
+     #[test]

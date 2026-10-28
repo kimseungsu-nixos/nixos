@@ -1,6 +1,7 @@
 { pkgs, ... }:
 
 let
+  satellite = import ./xwayland-satellite.nix { inherit pkgs; };
   niriConfig = pkgs.writeText "niri-config.kdl" ''
     input {
         keyboard {
@@ -35,7 +36,7 @@ let
 
     // Let Niri launch Xwayland on demand for X11 programs (Wine, KakaoTalk, ...).
     xwayland-satellite {
-        path "${pkgs.xwayland-satellite}/bin/xwayland-satellite"
+        path "${satellite}/bin/xwayland-satellite"
     }
 
     // The monitor lists 3440x1440@100 next to its default 50 Hz mode; at 50 Hz the pointer and
@@ -67,6 +68,25 @@ let
         open-floating true
         default-column-width {}
         default-window-height {}
+    }
+
+    // KakaoTalk's toast has no title and animates its size hints from 1x1.
+    // Pin the measured toast size so the compositor does not keep it at 1x1.
+    window-rule {
+        match app-id=r"^kakaotalk\.exe$" title="^$"
+        open-floating true
+        open-focused false
+        default-column-width { fixed 387; }
+        default-window-height { fixed 161; }
+        min-width 387
+        max-width 387
+        min-height 161
+        max-height 161
+        default-floating-position x=16 y=16 relative-to="bottom-right"
+        border { off; }
+        focus-ring { off; }
+        shadow { off; }
+        geometry-corner-radius 0
     }
 
     // The tray bridge's container window (home/xembedsniproxy): invisible, never focused.
@@ -188,6 +208,7 @@ let
 in
 {
   xdg.configFile."niri/config.kdl".source = niriConfig;
+  home.packages = [ (import ./kakaotalk-launcher.nix { inherit pkgs; }) ];
 
   # Puts X11 (XEmbed) tray icons, e.g. KakaoTalk's under Wine, into Noctalia's tray.
   systemd.user.services.xembedsniproxy = {
