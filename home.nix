@@ -26,7 +26,7 @@
     fi
   '';
 
-  # Use Zen for browser links.
+  # Use Zen as the system-wide browser. Antigravity has its own Firefox launcher below.
   programs.zen-browser = {
     enable = true;
     setAsDefaultBrowser = true;
@@ -77,10 +77,10 @@
     };
   };
 
-  # Open folders in Thunar. mimeapps.list stays writable (apps register URL handlers in it),
+  # Open folders in Nautilus. mimeapps.list stays writable (apps register URL handlers in it),
   # so the default is set in place instead of through xdg.mimeApps.
   home.activation.defaultFileManager = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    $DRY_RUN_CMD ${pkgs.xdg-utils}/bin/xdg-mime default thunar.desktop inode/directory
+    $DRY_RUN_CMD ${pkgs.xdg-utils}/bin/xdg-mime default org.gnome.Nautilus.desktop inode/directory
   '';
 
   # Archives open in Xarchiver (zip, 7z, rar, tar and friends).
@@ -93,26 +93,7 @@
     done
   '';
 
-  # foot for Thunar's "Open Terminal Here".
-  xdg.configFile."xfce4/helpers.rc".text = ''
-    TerminalEmulator=foot
-  '';
-  # Xfce ships no helper entry for foot. foot is started detached (setsid -f): otherwise
-  # xfce4-mime-helper waits on it and Thunar reports an error once the terminal is closed.
-  xdg.dataFile."xfce4/helpers/foot.desktop".text = ''
-    [Desktop Entry]
-    Version=1.0
-    Type=X-XFCE-Helper
-    Icon=foot
-    Name=foot
-    StartupNotify=false
-    X-XFCE-Binaries=foot;
-    X-XFCE-Category=TerminalEmulator
-    X-XFCE-Commands=${pkgs.util-linux}/bin/setsid -f %B;
-    X-XFCE-CommandsWithParameter=${pkgs.util-linux}/bin/setsid -f %B -e %s;
-  '';
-
-  # GTK look for Thunar and other GTK apps: dark adw-gtk3 with Papirus icons using
+  # GTK look for GTK apps: dark adw-gtk3 with Papirus icons using
   # Catppuccin Mocha mauve folders (matching modules/theme.nix).
   gtk = {
     enable = true;

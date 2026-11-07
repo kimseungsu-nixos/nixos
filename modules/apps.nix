@@ -81,15 +81,11 @@ in
   # services.xserver.enable pulls in xterm by default.
   services.xserver.excludePackages = [ pkgs.xterm ];
 
-  # File manager: Thunar with removable-media, archive and thumbnail support
-  # (mounts through the UDisks/GVFS services in modules/desktop.nix).
-  programs.thunar = {
+  # Nautilus uses UDisks/GVFS from modules/desktop.nix for removable media.
+  programs.nautilus-open-any-terminal = {
     enable = true;
-    plugins = with pkgs; [ thunar-volman thunar-archive-plugin ];
+    terminal = "foot";
   };
-  services.tumbler.enable = true;
-  # Thunar's archive menu (extract here, compress...) runs Xarchiver through the .tap file it ships.
-  environment.pathsToLink = [ "/libexec/thunar-archive-plugin" ];
 
   # Roblox through Sober, the Linux client (Flatpak only, not in nixpkgs). A boot-time job adds
   # Flathub and installs or updates Sober; it needs the network and does nothing when offline.
@@ -128,6 +124,7 @@ in
     python3
     rpiImager   # Raspberry Pi Imager, always as root
     ventoy-full-gtk  # bootable USB creator (run with sudo or via polkit)
+    nautilus
     # Archives: Xarchiver is the GUI; the others are what it calls. unar copes with legacy Korean
     # (CP949) file names in zip files, which 7-Zip and unzip turn into garbage.
     xarchiver
@@ -139,11 +136,5 @@ in
     ntfs3g
     dosfstools
     exfatprogs
-    # Thunar's "Open Terminal Here" goes through exo-open, which needs xfce4-mime-helper.
-    # Only that binary is linked in, not the rest of the Xfce settings apps.
-    (runCommand "xfce4-mime-helper" { } ''
-      mkdir -p $out/bin
-      ln -s ${xfce4-settings}/bin/xfce4-mime-helper $out/bin/
-    '')
   ];
 }

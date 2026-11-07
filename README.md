@@ -15,7 +15,7 @@ sudo nixos-rebuild switch --flake .#linux
 | `configuration.nix` | imports the modules below |
 | `modules/system.nix` | boot, network, locale, user, ssh, automatic Nix cleanup |
 | `modules/desktop.nix` | niri session, keyboard, Korean input (kime), audio, Bluetooth, printing |
-| `modules/apps.nix` | Hancom Office, Thunar, podman/distrobox, CLI tools |
+| `modules/apps.nix` | Hancom Office, Nautilus, podman/distrobox, CLI tools |
 | `modules/theme.nix` | Catppuccin Mocha: login screen, cursor, fonts |
 | `home.nix`, `home/` | home-manager: niri config (`niri.nix`), GTK theme and foot (`home.nix`), GUI apps (`packages.nix`), tray bridge (`xembedsniproxy/`), clipboard helper (`copy-image/`) |
 | `hardware-configuration.nix` | generated for this machine |
