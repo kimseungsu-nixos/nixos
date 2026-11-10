@@ -10,7 +10,8 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Wine/Proton use /dev/ntsync (kernel 6.14+) for faster thread synchronisation.
-  boot.kernelModules = [ "ntsync" ];
+  # uinput is needed by ds-controller to create virtual keyboard/pointer devices.
+  boot.kernelModules = [ "ntsync" "uinput" ];
 
   # Common removable-drive formats. vfat covers FAT32 and is already used by
   # the EFI partition; enable NTFS and exFAT for external storage as well.
@@ -74,16 +75,40 @@
   users.users."linux" = {
     isNormalUser = true;
     description = "Linux";
-    extraGroups = [ "networkmanager" "wheel" ];
+    # "input" 그룹이 있어야 DS가 키보드/조이스틱을 읽는다.
+    # libinput은 evdev 장치를 O_RDWR로 열기 때문에 그룹 쓰기 권한이 필수다.
+    extraGroups = [ "networkmanager" "wheel" "input" ];
   };
+
+  # --- SC-IPK DriverStation ---
+  # DS(Avalonia)는 네이티브 백엔드에서 libinput으로 키보드를 직접 연다.
+  # libinput은 O_RDWR로 열어야 하므로 /dev/input/event* 가 0660(input) 이어야 한다.
+  # 기본값(0644)으로는 open 이 EACCES 로 거부되어 DS가
+  # "Native backend initialization failed with status NoKeyboard" 로 죽고,
+  # AT-SPI 접근성 트리를 노출하지 않아 대시보드/로봇 API 연동이 통째로 막힌다.
+  #
+  # NixOS는 /etc 가 읽기 전용이라 rules 파일을 직접 복사할 수 없다.
+  # services.udev.packages 로 규칙 파일을 패키징해 전달한다.
+  services.udev.packages = [
+    (pkgs.writeTextFile {
+      name = "sc-ds-udev-rules";
+      destination = "/etc/udev/rules.d/99-sc-ds.rules";
+      text = builtins.readFile ../files/99-sc-ds.rules;
+    })
+  ];
+  # uinput(가상 입력 장치) 모듈. ds-controller 가 가상 키보드/포인터를 만든다.
+  # (위 boot.kernelModules 목록에 이미 포함)
 
   services.openssh.enable = true;
 
   nixpkgs.config.allowUnfree = true;
 
   nix.settings = {
-    extra-substituters = [ "https://noctalia.cachix.org" ];
-    extra-trusted-public-keys = [ "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4=" ];
+    extra-substituters = [ "https://noctalia.cachix.org" "https://ros.cachix.org" ];
+    extra-trusted-public-keys = [
+      "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
+      "ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo="
+    ];
   };
 
   # Automatic cleanup of old build results: every week, delete generations and

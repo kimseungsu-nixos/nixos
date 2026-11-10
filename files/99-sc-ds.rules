@@ -1,0 +1,57 @@
+# udev 규칙 — SC-IPK DriverStation
+#
+# 설치 위치: /etc/udev/rules.d/99-sc-ds.rules
+#
+# 왜 필요한가:
+#
+# DS(Avalonia)는 네이티브 백엔드에서 **libinput**으로 키보드/조이스틱을
+# 직접 연다. libinput은 evdev 장치를 아래 플래그로 연다:
+#
+#     evdev.c:2293  fd = open_restricted(libinput, devnode, O_RDWR | O_NONBLOCK | O_CLOEXEC);
+#
+# 즉 **쓰기 권한(O_RDWR)이 반드시 있어야** 키보드를 인식한다.
+#
+# 흔한 오해: "DS는 키보드를 읽기만 하니 0644면 충분하다" → 틀림.
+# 0644면 그룹/타인에 쓰기 비트가 없어 O_RDWR open이 EACCES로 거부되고,
+# libinput은 키보드를 하나도 열지 못해 DS를 아래 예러로 죽인다:
+#
+#     Native backend initialization failed with status NoKeyboard
+#     (NativeDsBackendInitializationFailedException)
+#
+# 그 결과 AT-SPI 접근성 트리도 노출되지 않아 대시보드/로봇 API 연동이
+# 통째로 막힌다. 이 규칙은 그 근본원인을 해결한다.
+#
+# 검증된 사실 (이 저장소를 만들 때 실측):
+#   * /dev/uinput (0660 root:input) → input 그룹이면 O_RDWR **성공**
+#   * /dev/input/event0 (0644 root:input) → input 그룹이어도 O_RDWR **실패**
+#   * libinput은 ID_SEAT이 없으면 "seat0"을 기본값으로 쓴다
+#     (udev-seat.c: `if (!device_seat) device_seat = default_seat;`)
+#     → ID_SEAT 규칙은 필수가 아니라 방어용이다.
+
+# --- 가상 입력 장치 ---
+# ds-controller가 만드는 가상 키보드/포인터. O_RDWR이 필수다.
+KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
+
+# --- 실장 키보드/조이스틱 ---
+# MODE 0660 = owner rw, group rw, other 없음.
+# input 그룹에 속한 사용자에게만 읽기/쓰기를 준다.
+# 이게 libinput의 O_RDWR open을 가능하게 한다 → NoKeyboard 해결.
+#
+# 왜 0640이 아니라 0660인가: libinput은 O_RDWR로 열어야 한다.
+# 0640은 그룹에 쓰기 비트가 없어 O_RDWR이 EACCES로 실패한다.
+KERNEL=="event[0-9]*", SUBSYSTEM=="input", GROUP="input", MODE="0660"
+
+# joystick 장치도 같은 이유로 0660.
+SUBSYSTEM=="input", ATTRS{name}=="*joystick*", GROUP="input", MODE="0660"
+
+# --- ID_SEAT ---
+# systemd의 71-seat.rules/73-seat-late.rules는 이 값을 설정하지만,
+# NixOS처럼 systemd udev 규칙 일부를 빼는 구성에서는 빠질 수 있다.
+# libinput은 ID_SEAT이 없으면 "seat0"으로 대체하므로 필수는 아니지만,
+# seat이 둘 이상인 구성에서 DS가 잘못된 seat의 키보드를 잡는 것을 막는다.
+SUBSYSTEM=="input", KERNEL=="event[0-9]*", ENV{ID_SEAT}="seat0"
+SUBSYSTEM=="input", KERNEL=="input[0-9]*", ENV{ID_SEAT}="seat0"
+
+# --- uinput 모듈 자동 로드 ---
+# 부팅 시 uinput 모듈이 없으면 가상 장치를 만들 수 없다.
+ACTION=="add", SUBSYSTEM=="module", KERNEL=="uinput", OPTIONS+="static_node=uinput"

@@ -4,7 +4,7 @@ NixOS flake for the `linux` machine: niri (scrollable-tiling Wayland compositor)
 Noctalia shell.
 
 ```bash
-sudo nixos-rebuild switch --flake .#linux
+./scripts/rebuild.sh switch
 ```
 
 ## Layout
@@ -23,8 +23,11 @@ sudo nixos-rebuild switch --flake .#linux
 ## Notes
 
 - `hnc2020` (Hancom Office) is a private repo fetched over HTTPS with the git
-  credentials from `gh auth login`. Update with `nix flake update hnc2020`, and
-  rebuild with `--sudo` so the fetch runs as your user, not root.
+  credentials from `gh auth login`. The rebuild script updates the flake as your
+  user before invoking `nixos-rebuild --sudo`; `./scripts/rebuild.sh build` builds
+  without switching, while `./scripts/rebuild.sh switch` applies the system.
+- ROS 2 Lyrical Desktop is installed in the user environment from `nix-ros-overlay`.
+  The overlay keeps its tested nixpkgs input separate from the system channel.
 - Old builds are cleaned up automatically: a weekly `nix.gc` deletes
   generations older than 7 days and `/boot` keeps the last 5.
 - Screenshots (`Print`, `Mod+Shift+S`) go to `~/Pictures/Screenshots` and onto the clipboard as
@@ -51,13 +54,16 @@ sudo nixos-rebuild switch --flake .#linux
 - The monitor is set to 3440x1440@100 in `home/niri.nix`; its default 50 Hz mode makes the
   pointer and windows trail visibly. `ntsync` is loaded for Wine's thread synchronisation.
 
-WPILib 2027 alpha comes from the `wpi2027-nix` input (`home/wpilib-2027.nix`): SysId, Glass, OutlineViewer,
-DataLogTool, WPICal, WPILib Utility (built from the allwpilib sources), AdvantageScope, Choreo, PathPlanner,
-the Elastic dashboard, and "WPILib VS Code 2027" (`wpilibcode2027`: VS Code with the WPILib, C++, Java and Gradle
-extensions and JDK 25, with its own settings).
+Only WPILib VMX 2020 is installed; the 2026 and 2027 IDEs and desktop tool suites are removed.
 
 WPILib VMX 2020 runs natively: WPILibInstaller-Avalonia installs the tree into `~/wpilib/2020_vmx`, and
-the `wpilib2020-vmx` package of the `nix-frc2020-vmx` input (`home/wpilib-vmx.nix`) starts it in an FHS environment
+the `wpilib2020-vmx` package of the `nix-frc2020-vmx` input from the `nix-frc2020-vmx` subdirectory of `wsuser1101/VMX-WPILib-2020-Archive` (`home/wpilib-vmx.nix`) starts it in an FHS environment
 (`wpilibcode2020_vmx`, `wpilib-elastic`, `wpilib-shell`; menu entries "WPILib VS Code 2020_vmx" and
 "WPILib Elastic NT3 2020_vmx"). The old Ubuntu distrobox container (`scripts/nixos-distrobox.sh` in the
 installer repo) is no longer needed; podman and distrobox stay installed.
+
+## Flake updates when rebuilding
+
+Run `./scripts/rebuild.sh build` to build or `./scripts/rebuild.sh switch` to apply. The script
+updates `flake.lock` first and stops if the network or updated flake evaluation fails. There is
+no scheduled or boot-time flake update.

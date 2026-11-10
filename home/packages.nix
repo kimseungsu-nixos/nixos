@@ -1,5 +1,7 @@
-{ pkgs, solidcraft, ... }:
+{ pkgs, solidcraft, nix-ros-overlay, ... }:
 let
+  rosPkgs = nix-ros-overlay.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+  ros = rosPkgs.rosPackages.lyrical;
   # Puts an image on the clipboard as PNG and BMP (Wine programs paste the BMP).
   copyImage = pkgs.callPackage ./copy-image { };
   # Antigravity opens OAuth pages through xdg-open. Put an app-local shim first in PATH so only
@@ -35,17 +37,8 @@ in
     vlc
     putty
     solidcraft.packages.${pkgs.stdenv.hostPlatform.system}.solidcraft
-    # FRC 2026 desktop tools.
-    advantagescope
-    choreo
-    elastic-dashboard
-    pathplanner
-    wpilib.datalogtool
-    wpilib.glass
-    wpilib.outlineviewer
-    wpilib.sysid
-    wpilib.wpical
-    wpilib.wpilib-utility
+    (ros.buildEnv { paths = [ ros.desktop ]; })
+    rosPkgs.colcon
     kicad
     arduino-ide
     godot    # Godot 4 game engine
@@ -71,8 +64,6 @@ in
     '')
   ];
 
-  # Give WPILib tools searchable launcher names; upstream desktop files use only short tool names
-  # such as "Glass" and therefore do not appear when searching for "wpilib".
   xdg.desktopEntries = {
     antigravity = {
       name = "Antigravity";
@@ -81,42 +72,6 @@ in
       comment = "Code Editing. Redefined.";
       categories = [ "Utility" "TextEditor" "Development" "IDE" ];
       terminal = false;
-    };
-    wpilib-2026-datalogtool = {
-      name = "WPILib 2026 DataLogTool";
-      exec = "datalogtool";
-      icon = "DataLogTool";
-      categories = [ "Development" "Education" ];
-    };
-    wpilib-2026-glass = {
-      name = "WPILib 2026 Glass";
-      exec = "glass";
-      icon = "Glass";
-      categories = [ "Development" "Education" ];
-    };
-    wpilib-2026-outlineviewer = {
-      name = "WPILib 2026 OutlineViewer";
-      exec = "outlineviewer";
-      icon = "OutlineViewer";
-      categories = [ "Development" "Education" ];
-    };
-    wpilib-2026-sysid = {
-      name = "WPILib 2026 SysId";
-      exec = "sysid";
-      icon = "SysId";
-      categories = [ "Development" "Education" ];
-    };
-    wpilib-2026-wpical = {
-      name = "WPILib 2026 WPICal";
-      exec = "wpical";
-      icon = "wpical";
-      categories = [ "Development" "Education" ];
-    };
-    wpilib-2026-utility = {
-      name = "WPILib 2026 Utility";
-      exec = "wpilib-utility";
-      icon = "wpilib-utility";
-      categories = [ "Development" "Education" ];
     };
   };
 

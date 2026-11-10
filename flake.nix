@@ -51,21 +51,12 @@
 
     # WPILib VMX 2020 archive: the FHS runtime package for the tree WPILibInstaller-Avalonia installs.
     nix-frc2020-vmx = {
-      url = "git+https://github.com/VMX-WPILib-2020-Archive/nix-frc2020-vmx.git";
+      url = "git+https://github.com/wsuser1101/VMX-WPILib-2020-Archive.git?dir=nix-frc2020-vmx";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # FRC tools (SysId, Glass, PathPlanner, ...) ported to the WPILib 2027 alpha.
-    wpi2027-nix = {
-      url = "git+https://github.com/W4Studica/wpi2027-nix.git";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    # Maintained FRC desktop tools for the 2026 season.
-    frc-nix = {
-      url = "github:frc4451/frc-nix/season/2026";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # ROS packages use the nixpkgs revision tested by the ROS overlay.
+    nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay/master";
 
     # Home Manager desktop and application configuration.
     home-manager = {
@@ -74,7 +65,7 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, wpi2027-nix, frc-nix, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, solidcraft, ... }: {
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, solidcraft, ... }: {
     # nixos-rebuild switch --flake .#linux
     # `nixos` is an alias: nixos-rebuild looks up the *current* hostname.
     nixosConfigurations = rec {
@@ -82,8 +73,6 @@
         system = "x86_64-linux";
         modules = [
           ./configuration.nix
-          # Use the maintained FRC package overlay.
-          { nixpkgs.overlays = [ frc-nix.overlays.default ]; }
           codex-desktop-linux.nixosModules.default
           claude-desktop.nixosModules.default
           omp.nixosModules.default
@@ -99,15 +88,13 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx wpi2027-nix solidcraft; };
+              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx nix-ros-overlay solidcraft; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";
               sharedModules = [
                 ./home/noctalia-ap-list.nix
                 ./home/wpilib-vmx.nix
-                ./home/wpilib-2026.nix
-                ./home/wpilib-2027.nix
                 zen-browser.homeModules.beta
                 noctalia.homeModules.default
               ];
