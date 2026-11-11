@@ -1,3 +1,5 @@
 
 *.nix text eol=lf
 *.sh text eol=lf
+# Unified diffs use a space-only line for empty context.
+*.patch whitespace=-blank-at-eol

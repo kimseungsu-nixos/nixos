@@ -58,6 +58,12 @@
     # ROS packages use the nixpkgs revision tested by the ROS overlay.
     nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay/master";
 
+    # PR #547 adds kernel input emulation for Niri; pin the patch revision.
+    lan-mouse-niri = {
+      url = "github:Manueloccorso/lan-mouse/a2dcf4dd940ef5d5fdda4d846b52c3001c3c37b4";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Home Manager desktop and application configuration.
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
@@ -65,7 +71,11 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, solidcraft, ... }: {
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, lan-mouse-niri, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, solidcraft, ... }: {
+    packages.x86_64-linux.lan-mouse-niri = import ./packages/lan-mouse.nix {
+      inherit lan-mouse-niri;
+      system = "x86_64-linux";
+    };
     # nixos-rebuild switch --flake .#linux
     # `nixos` is an alias: nixos-rebuild looks up the *current* hostname.
     nixosConfigurations = rec {
@@ -88,13 +98,14 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx nix-ros-overlay solidcraft; };
+              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx nix-ros-overlay lan-mouse-niri solidcraft; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";
               sharedModules = [
                 ./home/noctalia-ap-list.nix
                 ./home/wpilib-vmx.nix
+                ./home/lan-mouse.nix
                 zen-browser.homeModules.beta
                 noctalia.homeModules.default
               ];

@@ -260,6 +260,28 @@
         "type": "github"
       }
     },
+    "lan-mouse-niri": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "rust-overlay": "rust-overlay"
+      },
+      "locked": {
+        "lastModified": 1793891145,
+        "narHash": "sha256-1nr247GmPSlGyBIzsRNPyIwzLlDWSrQJeAYRKwSb5PE=",
+        "owner": "Manueloccorso",
+        "repo": "lan-mouse",
+        "rev": "a2dcf4dd940ef5d5fdda4d846b52c3001c3c37b4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Manueloccorso",
+        "repo": "lan-mouse",
+        "rev": "a2dcf4dd940ef5d5fdda4d846b52c3001c3c37b4",
+        "type": "github"
+      }
+    },
     "legacylauncher-src": {
       "flake": false,
       "locked": {
@@ -568,7 +590,7 @@
         "nix-bun": "nix-bun",
         "nixpkgs": "nixpkgs_7",
         "nixpkgs-darwin-x64": "nixpkgs-darwin-x64",
-        "rust-overlay": "rust-overlay"
+        "rust-overlay": "rust-overlay_2"
       },
       "locked": {
         "lastModified": 1794350826,
@@ -590,6 +612,7 @@
         "codex-desktop-linux": "codex-desktop-linux",
         "hnc2020": "hnc2020",
         "home-manager": "home-manager",
+        "lan-mouse-niri": "lan-mouse-niri",
         "nix-frc2020-vmx": "nix-frc2020-vmx",
         "nix-packages": "nix-packages",
         "nix-ros-overlay": "nix-ros-overlay",
@@ -617,6 +640,27 @@
       }
     },
     "rust-overlay": {
+      "inputs": {
+        "nixpkgs": [
+          "lan-mouse-niri",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792913333,
+        "narHash": "sha256-wjoZGhxH/Yr+OsFRpNyV9DpMGQIdNEjjAOinfzQvadk=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "fad80eb74614f7dc37c1c83df8caae64361eda22",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
+      }
+    },
+    "rust-overlay_2": {
       "inputs": {
         "nixpkgs": [
           "omp",

@@ -1,0 +1,29 @@
+--- a/src/connect.rs
++++ b/src/connect.rs
+@@ -1,5 +1,4 @@
+ use crate::client::ClientManager;
+-use crate::config::local_commit;
+ use lan_mouse_ipc::{ClientHandle, DEFAULT_PORT};
+ use lan_mouse_proto::{MAX_EVENT_SIZE, ProtoEvent};
+ use local_channel::mpsc::{Receiver, Sender, channel};
+@@ -198,18 +197,8 @@
+         conns.lock().await.insert(addr, conn.clone());
+         connecting.lock().await.remove(&handle);
+ 
+-        // Best-effort version handshake. Send our commit hash once
+-        // immediately after the DTLS handshake; the listen side
+-        // mirrors a Hello back so the receive loop can populate
+-        // `peer_commit`. Old peers will silently skip this event
+-        // per the forward-compat handler in [`receive_loop`].
+-        let (buf, len) = ProtoEvent::Hello {
+-            commit: local_commit(),
+-        }
+-        .into();
+-        if let Err(e) = conn.send(&buf[..len]).await {
+-            log::debug!("hello send to {addr} failed: {e}");
+-        }
++        // Stable v0.11.0 closes the DTLS connection on unknown event IDs.
++        // Do not send the optional Hello extension to unnegotiated peers.
+ 
+         // poll connection for active
+         spawn_local(ping_pong(addr, conn.clone(), ping_response.clone()));

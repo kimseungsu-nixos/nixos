@@ -67,3 +67,19 @@ installer repo) is no longer needed; podman and distrobox stay installed.
 Run `./scripts/rebuild.sh build` to build or `./scripts/rebuild.sh switch` to apply. The script
 updates `flake.lock` first and stops if the network or updated flake evaluation fails. There is
 no scheduled or boot-time flake update.
+
+## Keyboard and mouse sharing with Windows
+
+Lan Mouse uses the pinned Niri/uinput patch from upstream PR #547 and an additional
+compatibility patch that suppresses the new Hello event: Windows v0.11.0
+closes connections on unknown event IDs. The user daemon starts
+with the graphical session; open Lan Mouse from the launcher to configure peers. Its config
+remains writable so the GUI can save addresses and certificate authorizations. UDP 4242 is
+allowed by the NixOS firewall. Existing input-group and uinput permissions cover this backend.
+
+On Windows, install with `winget install --id feschber.LanMouse --exact`, open Lan Mouse and
+allow it through the Windows firewall on your private network. Add the other machine's LAN
+address and screen position, approve its certificate fingerprint, then enable the connection.
+The initial configuration places Windows (`192.168.0.235`) to the right of this NixOS machine.
+For this experimental build, keyboard/mouse sharing must be tested in both directions;
+clipboard synchronization is not included.

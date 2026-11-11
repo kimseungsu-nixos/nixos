@@ -45,6 +45,8 @@
     serviceConfig.TimeoutStopSec = "15s";
   };
   networking.networkmanager.enable = true;
+  # Lan Mouse shares keyboard and pointer input with the paired Windows machine.
+  networking.firewall.allowedUDPPorts = [ 4242 ];
   # Keep Wi-Fi at full power on every NetworkManager connection.
   networking.networkmanager.wifi.powersave = false;
   # NetworkManager ranks Ethernet (metric 100) above Wi-Fi (600). Both get the same metric here, so
