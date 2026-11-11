@@ -22,6 +22,9 @@ Noctalia shell.
 
 ## Notes
 
+- Nix runs one local build at a time with four compiler jobs. The daemon has a
+  four-core CPU quota and lower scheduling priority to keep the desktop responsive.
+
 - `hnc2020` (Hancom Office) is a private repo fetched over HTTPS with the git
   credentials from `gh auth login`. The rebuild script updates the flake as your
   user before invoking `nixos-rebuild --sudo`; `./scripts/rebuild.sh build` builds

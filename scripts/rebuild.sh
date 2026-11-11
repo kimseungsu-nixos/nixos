@@ -9,4 +9,4 @@ case "$action" in
 esac
 
 "$repo/scripts/update-flake.sh"
-exec nixos-rebuild --sudo "$action" --flake "$repo#linux" "$@"
+exec nixos-rebuild --sudo "$action" --flake "$repo#linux" --max-jobs 1 --cores 4 "$@"
