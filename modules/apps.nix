@@ -37,6 +37,22 @@ let
   };
 in
 {
+  # VS Code >= 1.122 moved ripgrep into a platform-specific directory.
+  # Keep the 26.05 package's system-ripgrep replacement working until its
+  # generic builder catches up; the substitution is a no-op once fixed upstream.
+  nixpkgs.overlays = [
+    (_final: prev: {
+      vscode = prev.vscode.overrideAttrs (old: {
+        postPatch = if lib.versionAtLeast old.version "1.122.0" then
+          lib.replaceStrings
+            [ "@vscode/ripgrep/bin/rg" ]
+            [ "@vscode/ripgrep-universal/bin/linux-x64/rg" ]
+            old.postPatch
+        else old.postPatch;
+      });
+    })
+  ];
+
   programs.firefox.enable = true;
 
   # ChatGPT Community (menu entry "ChatGPT Community", command codex-desktop). Unfree wrapper.
