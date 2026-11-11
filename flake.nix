@@ -55,6 +55,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # ROS 2 Elastic Dashboard uses the Flutter toolchain pinned by its own flake.
+    ros2-elastic-dashboard.url = "git+https://github.com/kimseungsu-zzz/ros2_elastic_dashboard.git";
+
     # ROS packages use the nixpkgs revision tested by the ROS overlay.
     nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay/master";
 
@@ -71,7 +74,7 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, lan-mouse-niri, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, solidcraft, ... }: {
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, ros2-elastic-dashboard, lan-mouse-niri, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, solidcraft, ... }: {
     packages.x86_64-linux.lan-mouse-niri = import ./packages/lan-mouse.nix {
       inherit lan-mouse-niri;
       system = "x86_64-linux";
@@ -98,7 +101,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx nix-ros-overlay lan-mouse-niri solidcraft; };
+              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx nix-ros-overlay ros2-elastic-dashboard lan-mouse-niri solidcraft; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";

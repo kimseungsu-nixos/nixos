@@ -563,6 +563,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_8": {
+      "locked": {
+        "lastModified": 1794042290,
+        "narHash": "sha256-ziZn2PvCJE5JEEpqTdxXwJpPB+L3YqoCpTAMCzyaP3U=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "noctalia": {
       "inputs": {
         "nixpkgs": "nixpkgs_6"
@@ -619,8 +635,27 @@
         "nixpkgs": "nixpkgs_5",
         "noctalia": "noctalia",
         "omp": "omp",
+        "ros2-elastic-dashboard": "ros2-elastic-dashboard",
         "solidcraft": "solidcraft",
         "zen-browser": "zen-browser"
+      }
+    },
+    "ros2-elastic-dashboard": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_8"
+      },
+      "locked": {
+        "lastModified": 1794398968,
+        "narHash": "sha256-irEzz2cFj/FrVJgDGr50SHNBkud0+QfKI3V4mCENHWs=",
+        "ref": "refs/heads/main",
+        "rev": "652f7adc436d3de7a5a08142646765a5b588bd7a",
+        "revCount": 780,
+        "type": "git",
+        "url": "https://github.com/kimseungsu-zzz/ros2_elastic_dashboard.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://github.com/kimseungsu-zzz/ros2_elastic_dashboard.git"
       }
     },
     "rosdistro": {

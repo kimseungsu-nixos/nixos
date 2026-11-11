@@ -1,4 +1,4 @@
-{ pkgs, solidcraft, nix-ros-overlay, ... }:
+{ pkgs, solidcraft, nix-ros-overlay, ros2-elastic-dashboard, ... }:
 let
   rosPkgs = nix-ros-overlay.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   ros = rosPkgs.rosPackages.lyrical;
@@ -39,6 +39,7 @@ in
     solidcraft.packages.${pkgs.stdenv.hostPlatform.system}.solidcraft
     (ros.buildEnv { paths = [ ros.desktop ]; })
     rosPkgs.colcon
+    ros2-elastic-dashboard.packages.${pkgs.stdenv.hostPlatform.system}.default
     kicad
     arduino-ide
     godot    # Godot 4 game engine
@@ -65,6 +66,12 @@ in
   ];
 
   xdg.desktopEntries = {
+    ros2-elastic-dashboard = {
+      name = "ROS 2 Elastic Dashboard";
+      exec = "ros2_elastic_dashboard";
+      categories = [ "Development" ];
+      terminal = false;
+    };
     antigravity = {
       name = "Antigravity";
       exec = "antigravity-firefox %F";
