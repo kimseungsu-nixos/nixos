@@ -6,6 +6,6 @@
 
 {
   programs.noctalia.package = noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [ ./../patches/noctalia-ap-list.patch ];
+    patches = (old.patches or [ ]) ++ [ ../patches/noctalia-ap-list.patch ../patches/noctalia-hotspot.patch ];
   });
 }

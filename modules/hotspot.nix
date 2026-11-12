@@ -140,47 +140,6 @@ let
       fail '핫스팟 서비스가 중단되었습니다.'
     '';
   };
-
-  button = pkgs.writeShellApplication {
-    name = "noctalia-hotspot";
-    runtimeInputs = [ pkgs.systemd pkgs.zenity pkgs.util-linux pkgs.libnotify ];
-    text = ''
-      show_credentials() {
-        local password
-        if ! password=$(< /run/${runtimeDir}/password) || [[ -z $password ]]; then
-          zenity --error --title='Wi‑Fi 핫스팟' --text='핫스팟 암호를 읽을 수 없습니다.'
-          return
-        fi
-        printf '네트워크 이름\n%s\n\n암호\n%s\n' '${ssid}' "$password" |
-          zenity --text-info --title='Wi‑Fi 핫스팟 켜짐' --width=350 --height=240
-      }
-
-      if [[ ''${1:-} == details ]]; then
-        if systemctl is-active --quiet ${unit}; then
-          show_credentials
-        else
-          notify-send 'Wi‑Fi 핫스팟' '핫스팟이 꺼져 있습니다.'
-        fi
-        exit 0
-      fi
-
-      exec 9>"$XDG_RUNTIME_DIR/noctalia-hotspot.lock"
-      flock -n 9 || exit 0
-      if systemctl is-active --quiet ${unit}; then
-        if systemctl stop ${unit}; then
-          notify-send 'Wi‑Fi 핫스팟' '핫스팟을 껐습니다.'
-        else
-          notify-send 'Wi‑Fi 핫스팟' '핫스팟을 끄지 못했습니다.'
-        fi
-      elif systemctl start ${unit}; then
-        flock -u 9
-        show_credentials
-      else
-        reason=$(systemctl show -p StatusText --value ${unit})
-        notify-send 'Wi‑Fi 핫스팟' "''${reason:-핫스팟을 시작하지 못했습니다.}"
-      fi
-    '';
-  };
 in
 {
   systemd.services.noctalia-hotspot = {
@@ -226,15 +185,5 @@ in
   networking.firewall.interfaces.${device} = {
     allowedTCPPorts = [ 53 ];
     allowedUDPPorts = [ 53 67 ];
-  };
-
-  home-manager.users.linux.programs.noctalia.settings.widget.hotspot = {
-    type = "custom_button";
-    glyph = "access-point";
-    tooltip = "Wi‑Fi 핫스팟 · 클릭하여 켜기/끄기 · 우클릭하여 암호 보기";
-    actions = {
-      left = "exec ${button}/bin/noctalia-hotspot";
-      right = "exec ${button}/bin/noctalia-hotspot details";
-    };
   };
 }
