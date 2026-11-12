@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   device = "noctalia-ap";
@@ -215,6 +215,10 @@ in
   '';
 
   networking.networkmanager.unmanaged = [ "interface-name:${device}" ];
+  # NixOS queues a supplicant restart on WLAN add/remove. Clear it for the hostapd interface.
+  services.udev.extraRules = lib.mkAfter ''
+    ACTION=="add|remove", SUBSYSTEM=="net", KERNEL=="${device}", RUN="${pkgs.coreutils}/bin/true"
+  '';
   networking.nat = {
     enable = true;
     internalInterfaces = [ device ];
