@@ -1,37 +1,55 @@
 diff --git a/assets/translations/en.json b/assets/translations/en.json
-index 4fa12b3..1b7f9eb 100644
+index 4fa12b3..1a38423 100644
 --- a/assets/translations/en.json
 +++ b/assets/translations/en.json
-@@ -408,7 +408,10 @@
+@@ -408,7 +408,19 @@
        "error-missing-password": "Enter your password.",
        "error-unsupported-phase2": "PEAP requires MSCHAPv2 inner authentication.",
        "external-ip": "WAN {ip}",
 +      "hotspot": "Hotspot",
        "hotspot-active": "Wi-Fi is running a hotspot; turning Wi-Fi off stops it",
++      "hotspot-apply": "Apply",
++      "hotspot-auto": "Automatic",
++      "hotspot-band": "Band",
++      "hotspot-channel-24": "2.4 GHz channel",
++      "hotspot-channel-5": "5 GHz channel",
++      "hotspot-channel-hint": "A shared adapter uses the connected Wi-Fi channel. Broadcasting on both bands requires two compatible adapters.",
 +      "hotspot-failed": "Could not change hotspot state",
++      "hotspot-generated-password": "Automatically generated",
++      "hotspot-name": "Network name",
++      "hotspot-settings": "Hotspot settings",
 +      "hotspot-show-password": "Show or hide hotspot password",
        "identity": "Identity",
        "no-networks": "No networks in range",
        "not-connected": "Not connected",
 diff --git a/assets/translations/ko.json b/assets/translations/ko.json
-index d96586c..0909e9e 100644
+index d96586c..8c851d3 100644
 --- a/assets/translations/ko.json
 +++ b/assets/translations/ko.json
-@@ -325,6 +325,9 @@
+@@ -325,6 +325,18 @@
        "enterprise-prompt-for": "{ssid}로 로그인",
        "error-missing-password": "비밀번호를 입력하세요.",
        "external-ip": "WAN {ip}",
 +      "hotspot": "핫스팟",
++      "hotspot-apply": "적용",
++      "hotspot-auto": "자동",
++      "hotspot-band": "대역",
++      "hotspot-channel-24": "2.4GHz 채널",
++      "hotspot-channel-5": "5GHz 채널",
++      "hotspot-channel-hint": "어댑터 하나를 공유하면 연결 중인 Wi‑Fi와 같은 채널을 사용합니다. 두 대역을 동시에 송출하려면 호환 어댑터 두 개가 필요합니다.",
 +      "hotspot-failed": "핫스팟 상태를 바꾸지 못했습니다",
++      "hotspot-generated-password": "자동 생성",
++      "hotspot-name": "네트워크 이름",
++      "hotspot-settings": "핫스팟 설정",
 +      "hotspot-show-password": "핫스팟 암호 표시 또는 숨기기",
        "no-networks": "범위 내에 네트워크 없음",
        "not-connected": "연결되지 않음",
        "password": "비밀번호",
 diff --git a/src/shell/control_center/tabs/network_tab.cpp b/src/shell/control_center/tabs/network_tab.cpp
-index bcae3dc..b0a7946 100644
+index bcae3dc..acdaf4a 100644
 --- a/src/shell/control_center/tabs/network_tab.cpp
 +++ b/src/shell/control_center/tabs/network_tab.cpp
-@@ -1,22 +1,28 @@
+@@ -1,22 +1,29 @@
  #include "shell/control_center/tabs/network_tab.h"
  
 +#include "core/deferred_call.h"
@@ -49,6 +67,7 @@ index bcae3dc..b0a7946 100644
  #include "ui/builders.h"
  #include "ui/palette.h"
  #include "ui/style.h"
++#include "util/file_utils.h"
 +#include "util/string_utils.h"
  
  #include <algorithm>
@@ -60,21 +79,36 @@ index bcae3dc..b0a7946 100644
  #include <map>
  #include <memory>
  #include <string>
-@@ -29,6 +35,13 @@ using namespace control_center;
+@@ -29,6 +36,28 @@ using namespace control_center;
  namespace {
  
    constexpr float kRowMinHeight = Style::controlHeightLg;
 +  constexpr const char* kHotspotUnit = "noctalia-hotspot.service";
 +  constexpr const char* kHotspotPassword = "/run/noctalia-hotspot/password";
++  constexpr const char* kHotspotStatus = "/run/noctalia-hotspot/status";
++  constexpr std::array kHotspotBands{"auto", "2.4", "5", "dual"};
++  constexpr std::array kChannels24{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"};
++  constexpr std::array kChannels5{"0", "36", "40", "44", "48", "149", "153", "157", "161", "165", "169", "173", "177"};
 +
 +  bool hotspotRunning() {
 +    std::error_code error;
 +    return std::filesystem::is_regular_file(kHotspotPassword, error);
 +  }
++
++  template <typename Values> std::size_t hotspotOption(const Values& values, std::string_view value) {
++    const auto found = std::ranges::find_if(values, [value](std::string_view option) { return option == value; });
++    return found == values.end() ? 0U : static_cast<std::size_t>(found - values.begin());
++  }
++
++  template <typename Values> std::vector<std::string> hotspotChannelLabels(const Values& values) {
++    std::vector<std::string> labels(values.begin(), values.end());
++    labels.front() = i18n::tr("control-center.network.hotspot-auto");
++    return labels;
++  }
  
    // Label and wire value in one row, so the visible dropdown order and the value
    // sent to NetworkManager cannot drift apart.
-@@ -647,6 +660,7 @@ NetworkTab::NetworkTab(
+@@ -647,6 +676,7 @@ NetworkTab::NetworkTab(
  }
  
  NetworkTab::~NetworkTab() {
@@ -82,7 +116,15 @@ index bcae3dc..b0a7946 100644
    if (m_secrets != nullptr) {
      m_secrets->setRequestCallback(nullptr);
      m_secrets->cancelSecret();
-@@ -936,6 +950,16 @@ void NetworkTab::setActive(bool active) {
+@@ -917,6 +947,7 @@ std::unique_ptr<Flex> NetworkTab::create() {
+   scrollContent->setAlign(FlexAlign::Stretch);
+   scrollContent->setGap(Style::spaceMd * scale);
+   scrollContent->addChild(std::move(passwordCard));
++  scrollContent->addChild(createHotspotCard(scale));
+   scrollContent->addChild(
+       ui::column({
+           .out = &m_list,
+@@ -936,6 +967,16 @@ void NetworkTab::setActive(bool active) {
      return;
    }
    m_active = active;
@@ -99,7 +141,7 @@ index bcae3dc..b0a7946 100644
    if (m_active && m_network != nullptr) {
      m_network->requestScan();
    }
-@@ -955,6 +979,7 @@ void NetworkTab::doLayout(Renderer& renderer, float contentWidth, float bodyHeig
+@@ -955,6 +996,7 @@ void NetworkTab::doLayout(Renderer& renderer, float contentWidth, float bodyHeig
    rebuildApList(renderer);
    syncApRows();
    syncCellularCard();
@@ -107,65 +149,271 @@ index bcae3dc..b0a7946 100644
    syncCurrentCard();
    m_rootLayout->layout(renderer);
  }
-@@ -966,6 +991,7 @@ void NetworkTab::doUpdate(Renderer& renderer) {
+@@ -966,6 +1008,9 @@ void NetworkTab::doUpdate(Renderer& renderer) {
    // A signal percent's text changes its width, so the list has to be laid out again.
    bool listChanged = syncApRows();
    listChanged = syncCellularCard() || listChanged;
-+  listChanged = syncHotspot() || listChanged;
++  if (syncHotspot() && m_rootLayout != nullptr) {
++    m_rootLayout->layout(renderer);
++  }
    if (listChanged && m_list != nullptr) {
      m_list->layout(renderer);
    }
-@@ -996,6 +1022,11 @@ void NetworkTab::onClose() {
+@@ -996,6 +1041,20 @@ void NetworkTab::onClose() {
    m_list = nullptr;
    m_rescanButton = nullptr;
    m_wifiToggle = nullptr;
++  m_hotspotCard = nullptr;
++  m_hotspotForm = nullptr;
 +  m_hotspotToggle = nullptr;
 +  m_hotspotRevealButton = nullptr;
++  m_hotspotSaveButton = nullptr;
 +  m_hotspotDetail = nullptr;
++  m_hotspotName = nullptr;
++  m_hotspotPassphrase = nullptr;
++  m_hotspotBand = nullptr;
++  m_hotspotChannel24 = nullptr;
++  m_hotspotChannel5 = nullptr;
 +  m_hotspotTimer.stop();
++  m_hotspotEditing = false;
 +  m_hotspotPassword.clear();
    m_scanSpinner = nullptr;
    m_currentRow = nullptr;
    m_disconnectButton = nullptr;
-@@ -1016,6 +1047,66 @@ void NetworkTab::onClose() {
+@@ -1016,6 +1075,267 @@ void NetworkTab::onClose() {
    ++m_wifiToggleRequestGeneration;
  }
  
++std::unique_ptr<Flex> NetworkTab::createHotspotCard(float scale) {
++  auto card = ui::column({
++      .out = &m_hotspotCard,
++      .configure = [scale, opacity = panelCardOpacity()](Flex& section) {
++        applySectionCardStyle(section, scale, opacity);
++      },
++  });
++  auto header = makeCardHeaderRow(i18n::tr("control-center.network.hotspot"), scale);
++  header->addChild(ui::button({
++      .out = &m_hotspotRevealButton,
++      .glyph = "eye",
++      .glyphSize = Style::baseGlyphSize * scale,
++      .variant = ButtonVariant::Ghost,
++      .tooltip = i18n::tr("control-center.network.hotspot-show-password"),
++      .padding = Style::spaceXs * scale,
++      .radius = Style::scaledRadiusSm(scale),
++      .visible = false,
++      .onClick = [this] {
++        if (m_hotspotPassword.empty()) {
++          std::ifstream password(kHotspotPassword);
++          std::getline(password, m_hotspotPassword);
++        } else {
++          m_hotspotPassword.clear();
++        }
++        PanelManager::instance().refresh();
++      },
++  }));
++  header->addChild(ui::button({
++      .glyph = "settings",
++      .glyphSize = Style::baseGlyphSize * scale,
++      .variant = ButtonVariant::Ghost,
++      .tooltip = i18n::tr("control-center.network.hotspot-settings"),
++      .padding = Style::spaceXs * scale,
++      .radius = Style::scaledRadiusSm(scale),
++      .onClick = [this] {
++        if (m_hotspotSaving || m_hotspotRequested) {
++          return;
++        }
++        m_hotspotEditing = !m_hotspotEditing;
++        if (m_hotspotEditing) {
++          loadHotspotSettings();
++        }
++        PanelManager::instance().refresh();
++      },
++  }));
++  header->addChild(ui::toggle({
++      .out = &m_hotspotToggle,
++      .checkedImmediate = m_hotspotRequested.value_or(hotspotRunning()),
++      .toggleSize = ToggleSize::Medium,
++      .scale = scale,
++      .onChange = [this](bool checked) { requestHotspot(checked); },
++  }));
++  card->addChild(std::move(header));
++  card->addChild(ui::label({
++      .out = &m_hotspotDetail,
++      .fontSize = Style::fontSizeCaption * scale,
++      .color = colorSpecFromRole(ColorRole::OnSurfaceVariant),
++      .maxLines = 2,
++      .visible = false,
++  }));
++
++  auto form = ui::column({
++      .out = &m_hotspotForm,
++      .align = FlexAlign::Stretch,
++      .gap = Style::spaceXs * scale,
++      .visible = false,
++  });
++  const auto addField = [&form, scale](std::string label, std::unique_ptr<Node> control) {
++    form->addChild(ui::row(
++        {.align = FlexAlign::Center, .gap = Style::spaceSm * scale},
++        ui::label({
++            .text = std::move(label),
++            .fontSize = Style::fontSizeCaption * scale,
++            .color = colorSpecFromRole(ColorRole::OnSurface),
++            .width = 118.0F * scale,
++        }),
++        std::move(control)
++    ));
++  };
++  addField(i18n::tr("control-center.network.hotspot-name"), ui::input({
++      .out = &m_hotspotName,
++      .surfaceOpacity = panelCardOpacity(),
++      .surfaceRole = ColorRole::Surface,
++      .flexGrow = 1.0F,
++  }));
++  addField(i18n::tr("control-center.network.password"), ui::input({
++      .out = &m_hotspotPassphrase,
++      .placeholder = i18n::tr("control-center.network.hotspot-generated-password"),
++      .passwordMode = true,
++      .surfaceOpacity = panelCardOpacity(),
++      .surfaceRole = ColorRole::Surface,
++      .flexGrow = 1.0F,
++  }));
++  addField(i18n::tr("control-center.network.hotspot-band"), ui::select({
++      .out = &m_hotspotBand,
++      .options = std::vector<std::string>{i18n::tr("control-center.network.hotspot-auto"), "2.4 GHz", "5 GHz", "2.4 + 5 GHz"},
++      .selectedIndex = 0U,
++      .flexGrow = 1.0F,
++      .onSelectionChanged = [](std::size_t, std::string_view) { PanelManager::instance().refresh(); },
++  }));
++  addField(i18n::tr("control-center.network.hotspot-channel-24"), ui::select({
++      .out = &m_hotspotChannel24,
++      .options = hotspotChannelLabels(kChannels24),
++      .selectedIndex = 0U,
++      .flexGrow = 1.0F,
++  }));
++  addField(i18n::tr("control-center.network.hotspot-channel-5"), ui::select({
++      .out = &m_hotspotChannel5,
++      .options = hotspotChannelLabels(kChannels5),
++      .selectedIndex = 0U,
++      .flexGrow = 1.0F,
++  }));
++  form->addChild(ui::label({
++      .text = i18n::tr("control-center.network.hotspot-channel-hint"),
++      .fontSize = Style::fontSizeCaption * scale,
++      .color = colorSpecFromRole(ColorRole::OnSurfaceVariant),
++      .maxLines = 3,
++  }));
++  auto actions = ui::row({.align = FlexAlign::Center, .justify = FlexJustify::End});
++  actions->addChild(ui::button({
++      .out = &m_hotspotSaveButton,
++      .text = i18n::tr("control-center.network.hotspot-apply"),
++      .variant = ButtonVariant::Default,
++      .onClick = [this] { saveHotspotSettings(); },
++  }));
++  form->addChild(std::move(actions));
++  card->addChild(std::move(form));
++  return card;
++}
++
 +bool NetworkTab::syncHotspot() {
 +  const bool active = hotspotRunning();
 +  m_hotspotActive = active;
 +  if (!active) {
 +    m_hotspotPassword.clear();
 +  }
-+  if (m_hotspotToggle == nullptr) {
++  if (m_hotspotCard == nullptr) {
 +    return false;
 +  }
 +
++  const bool available = networkAvailable();
++  const bool pending = m_hotspotSaving || m_hotspotRequested.has_value();
++  const auto band = m_hotspotBand->selectedIndex();
 +  m_hotspotToggle->setChecked(m_hotspotRequested.value_or(active));
-+  m_hotspotToggle->setEnabled(!m_hotspotRequested && (active || m_network->state().wirelessEnabled));
++  m_hotspotToggle->setEnabled(!pending && (active || (available && m_network->state().wirelessEnabled)));
++  m_hotspotName->setEnabled(!pending);
++  m_hotspotPassphrase->setEnabled(!pending);
++  m_hotspotBand->setEnabled(!pending);
++  m_hotspotChannel24->setEnabled(!pending && (band == 1U || band == 3U));
++  m_hotspotChannel5->setEnabled(!pending && (band == 2U || band == 3U));
++  m_hotspotSaveButton->setEnabled(!pending);
 +  m_hotspotRevealButton->setVisible(active);
 +  m_hotspotRevealButton->setGlyph(m_hotspotPassword.empty() ? "eye" : "eye-off");
-+  const std::string detail = m_hotspotPassword.empty() ? "NixOS Hotspot" : "NixOS Hotspot  •  " + m_hotspotPassword;
-+  const bool changed = m_hotspotDetail->visible() != active || m_hotspotDetail->text() != detail;
++  std::string detail;
++  if (active) {
++    std::ifstream status(kHotspotStatus);
++    std::string channels;
++    if (!std::getline(status, detail)) {
++      detail = "NixOS Hotspot";
++    }
++    if (std::getline(status, channels) && !channels.empty()) {
++      detail += "  •  " + channels;
++    }
++    if (!m_hotspotPassword.empty()) {
++      detail += '\n' + m_hotspotPassword;
++    }
++  }
++  const bool changed = m_hotspotCard->visible() != available || m_hotspotForm->visible() != m_hotspotEditing ||
++                       m_hotspotDetail->visible() != active || m_hotspotDetail->text() != detail;
++  m_hotspotCard->setVisible(available);
++  m_hotspotForm->setVisible(m_hotspotEditing);
 +  m_hotspotDetail->setVisible(active);
 +  m_hotspotDetail->setText(detail);
 +  return changed;
 +}
 +
++void NetworkTab::loadHotspotSettings() {
++  std::array<std::string, 5> values{"auto", "0", "0", "NixOS Hotspot", ""};
++  std::ifstream settings(FileUtils::configDir() + "/hotspot.conf");
++  std::string line;
++  for (auto& value : values) {
++    if (std::getline(settings, line)) {
++      value = line;
++    }
++  }
++  m_hotspotBand->setSelectedIndexSilently(hotspotOption(kHotspotBands, values[0]));
++  m_hotspotChannel24->setSelectedIndexSilently(hotspotOption(kChannels24, values[1]));
++  m_hotspotChannel5->setSelectedIndexSilently(hotspotOption(kChannels5, values[2]));
++  m_hotspotName->setValue(values[3]);
++  m_hotspotPassphrase->setValue(values[4]);
++}
++
++void NetworkTab::saveHotspotSettings() {
++  if (m_hotspotSaving || m_hotspotRequested) {
++    return;
++  }
++  std::string settings = optionAt(kHotspotBands, m_hotspotBand->selectedIndex());
++  settings += '\n';
++  settings += optionAt(kChannels24, m_hotspotChannel24->selectedIndex());
++  settings += '\n';
++  settings += optionAt(kChannels5, m_hotspotChannel5->selectedIndex());
++  settings += '\n' + m_hotspotName->value() + '\n' + m_hotspotPassphrase->value() + '\n';
++  m_hotspotSaving = true;
++  runHotspotCommand({"noctalia-hotspot-service", "save"}, std::move(settings));
++}
++
 +void NetworkTab::requestHotspot(bool enabled) {
-+  if (m_hotspotRequested) {
++  if (m_hotspotRequested || m_hotspotSaving) {
 +    return;
 +  }
 +  m_hotspotRequested = enabled;
++  runHotspotCommand({"systemctl", "--no-ask-password", enabled ? "start" : "stop", kHotspotUnit});
++}
++
++void NetworkTab::runHotspotCommand(std::vector<std::string> command, std::optional<std::string> input) {
 +  PanelManager::instance().requestUpdateOnly();
 +
 +  const std::weak_ptr<int> alive = m_hotspotLifetime;
++  const bool saving = m_hotspotSaving;
 +  const bool started = process::runAsync(
-+      {"systemctl", "--no-ask-password", enabled ? "start" : "stop", kHotspotUnit},
++      command,
 +      process::RunCallbacks{
-+          .onExit = [this, alive](process::RunResult run) {
++          .onExit = [this, alive, saving](process::RunResult run) {
 +            std::string reason;
-+            if (!run) {
++            if (!run && saving) {
++              reason = StringUtils::trim(run.err);
++              if (const auto lastLine = reason.rfind('\n'); lastLine != std::string::npos) {
++                reason.erase(0, lastLine + 1);
++              }
++            } else if (!run) {
 +              reason = StringUtils::trim(process::runSyncWithTimeout(
 +                  {"systemctl", "show", "-p", "StatusText", "--value", kHotspotUnit}, std::chrono::seconds(2)
 +              ).out);
@@ -175,6 +423,11 @@ index bcae3dc..b0a7946 100644
 +                return;
 +              }
 +              m_hotspotRequested.reset();
++              if (m_hotspotSaving && success) {
++                m_hotspotEditing = false;
++                m_hotspotPassword.clear();
++              }
++              m_hotspotSaving = false;
 +              if (!success) {
 +                notify::error(i18n::tr("control-center.network.hotspot"),
 +                              i18n::tr("control-center.network.hotspot-failed"), reason);
@@ -183,10 +436,11 @@ index bcae3dc..b0a7946 100644
 +            });
 +          },
 +      },
-+      process::RunOptions{.timeout = std::chrono::seconds(40), .maxOutputBytes = 4096}
++      process::RunOptions{.timeout = std::chrono::seconds(90), .maxOutputBytes = 4096, .stdinData = std::move(input)}
 +  );
 +  if (!started) {
 +    m_hotspotRequested.reset();
++    m_hotspotSaving = false;
 +    notify::error(i18n::tr("control-center.network.hotspot"), i18n::tr("control-center.network.hotspot-failed"), {});
 +  }
 +}
@@ -194,88 +448,52 @@ index bcae3dc..b0a7946 100644
  void NetworkTab::syncPasswordCard() {
    if (m_hasPendingSecret
        && !m_pendingAccessPoint.has_value()
-@@ -1581,6 +1672,9 @@ void NetworkTab::rebuildApList(Renderer& renderer) {
-   };
+@@ -1822,6 +2142,10 @@ void NetworkTab::requestCellularEnabled(bool enabled) {
+ }
  
-   m_wifiToggle = nullptr;
-+  m_hotspotToggle = nullptr;
-+  m_hotspotRevealButton = nullptr;
-+  m_hotspotDetail = nullptr;
-   m_scanSpinner = nullptr;
-   m_rescanButton = nullptr;
-   m_cellularToggle = nullptr;
-@@ -1679,6 +1773,50 @@ void NetworkTab::rebuildApList(Renderer& renderer) {
-     }
- 
-     {
-+      auto hotspotCard = ui::column({
-+          .configure = [scale, opacity](Flex& card) { applySectionCardStyle(card, scale, opacity); },
-+      });
-+      auto header = makeCardHeaderRow(i18n::tr("control-center.network.hotspot"), scale);
-+      header->addChild(
-+          ui::button({
-+              .out = &m_hotspotRevealButton,
-+              .glyph = "eye",
-+              .glyphSize = Style::baseGlyphSize * scale,
-+              .variant = ButtonVariant::Ghost,
-+              .tooltip = i18n::tr("control-center.network.hotspot-show-password"),
-+              .padding = Style::spaceXs * scale,
-+              .radius = Style::scaledRadiusSm(scale),
-+              .visible = false,
-+              .onClick = [this] {
-+                if (m_hotspotPassword.empty()) {
-+                  std::ifstream password(kHotspotPassword);
-+                  std::getline(password, m_hotspotPassword);
-+                } else {
-+                  m_hotspotPassword.clear();
-+                }
-+                PanelManager::instance().refresh();
-+              },
-+          })
-+      );
-+      header->addChild(
-+          ui::toggle({
-+              .out = &m_hotspotToggle,
-+              .checkedImmediate = m_hotspotRequested.value_or(hotspotRunning()),
-+              .toggleSize = ToggleSize::Medium,
-+              .scale = scale,
-+              .onChange = [this](bool checked) { requestHotspot(checked); },
-+          })
-+      );
-+      hotspotCard->addChild(std::move(header));
-+      hotspotCard->addChild(ui::label({
-+          .out = &m_hotspotDetail,
-+          .fontSize = Style::fontSizeCaption * scale,
-+          .color = colorSpecFromRole(ColorRole::OnSurfaceVariant),
-+          .maxLines = 1,
-+          .visible = false,
-+      }));
-+      m_list->addChild(std::move(hotspotCard));
-+
-       auto wifiCard = ui::column({
-           .configure = [scale, opacity](Flex& card) { applySectionCardStyle(card, scale, opacity); },
-       });
+ void NetworkTab::onPanelCardOpacityChanged(float opacity) {
++  if (m_hotspotName != nullptr && m_hotspotPassphrase != nullptr) {
++    m_hotspotName->setSurfaceOpacity(opacity);
++    m_hotspotPassphrase->setSurfaceOpacity(opacity);
++  }
+   if (m_passwordInput != nullptr) {
+     m_passwordInput->setSurfaceOpacity(opacity);
+   }
 diff --git a/src/shell/control_center/tabs/network_tab.h b/src/shell/control_center/tabs/network_tab.h
-index 0ddf4ea..e22978f 100644
+index 0ddf4ea..03a24ce 100644
 --- a/src/shell/control_center/tabs/network_tab.h
 +++ b/src/shell/control_center/tabs/network_tab.h
-@@ -48,6 +48,8 @@ private:
+@@ -48,6 +48,12 @@ private:
    // A backend exists and its daemon is on the bus.
    bool networkAvailable() const noexcept;
    void syncCurrentCard();
++  std::unique_ptr<Flex> createHotspotCard(float scale);
 +  bool syncHotspot();
++  void loadHotspotSettings();
++  void saveHotspotSettings();
 +  void requestHotspot(bool enabled);
++  void runHotspotCommand(std::vector<std::string> command, std::optional<std::string> input = {});
    void beginPendingAction(bool wasConnected);
    void requestWirelessEnabled(bool enabled);
    void handleWirelessEnabledCompletion(std::uint64_t generation, bool success);
-@@ -113,6 +115,14 @@ private:
+@@ -113,6 +119,24 @@ private:
  
    Button* m_rescanButton = nullptr;
    Toggle* m_wifiToggle = nullptr;
++  Flex* m_hotspotCard = nullptr;
++  Flex* m_hotspotForm = nullptr;
 +  Toggle* m_hotspotToggle = nullptr;
 +  Button* m_hotspotRevealButton = nullptr;
++  Button* m_hotspotSaveButton = nullptr;
 +  Label* m_hotspotDetail = nullptr;
++  Input* m_hotspotName = nullptr;
++  Input* m_hotspotPassphrase = nullptr;
++  Select* m_hotspotBand = nullptr;
++  Select* m_hotspotChannel24 = nullptr;
++  Select* m_hotspotChannel5 = nullptr;
 +  bool m_hotspotActive = false;
++  bool m_hotspotEditing = false;
++  bool m_hotspotSaving = false;
 +  std::optional<bool> m_hotspotRequested;
 +  std::string m_hotspotPassword;
 +  Timer m_hotspotTimer;
@@ -283,7 +501,7 @@ index 0ddf4ea..e22978f 100644
    Flex* m_currentRow = nullptr;
    Button* m_disconnectButton = nullptr;
    Spinner* m_scanSpinner = nullptr;
-@@ -161,4 +171,4 @@ private:
+@@ -161,4 +185,4 @@ private:
  
    static constexpr std::chrono::seconds kActionPendingTimeout = std::chrono::seconds(6);
    static constexpr std::chrono::seconds kCellularPendingTimeout = std::chrono::seconds(25);
