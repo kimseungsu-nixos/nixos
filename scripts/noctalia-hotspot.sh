@@ -5,11 +5,12 @@ password=
 mode=auto
 channel24=0
 channel5=0
+uplink=auto
 
 read_preferences() {
   local -a values=()
   mapfile -t values
-  if (( ${#values[@]} != 5 )); then
+  if (( ${#values[@]} < 5 || ${#values[@]} > 6 )); then
     return 1
   fi
   mode=${values[0]}
@@ -17,11 +18,13 @@ read_preferences() {
   channel5=${values[2]}
   ssid=${values[3]}
   password=${values[4]}
+  uplink=${values[5]:-auto}
 
   [[ $mode == auto || $mode == 2.4 || $mode == 5 || $mode == dual ]] &&
     [[ $channel24 =~ ^([0-9]|1[0-3])$ && $channel5 =~ ^(0|[1-9][0-9]{0,2})$ ]] &&
     (( channel5 <= 196 && ${#ssid} >= 1 && ${#ssid} <= 32 )) &&
     [[ $ssid != *[[:cntrl:]]* ]] &&
+    { [[ $uplink == auto ]] || valid_uplink "$uplink"; } &&
     { [[ -z $password ]] ||
       { (( ${#password} >= 8 && ${#password} <= 63 )) && [[ $password != *[![:print:]]* ]]; }; }
 }
@@ -140,6 +143,9 @@ save_preferences() {
     fail '이름은 1~32바이트, 비밀번호는 인쇄 가능한 ASCII 8~63자로 입력하세요.'
   mapfile -t radios < <(available_radios)
   build_plan || fail "$(plan_error)"
+  if [[ $uplink != auto && -z $(selected_routes) ]]; then
+    fail '선택한 공유 네트워크에 연결한 뒤 다시 적용하세요.'
+  fi
 
   local directory candidate previous reason
   directory=$(dirname "$settings")
@@ -149,9 +155,11 @@ save_preferences() {
   candidate=$(mktemp "$directory/.hotspot.XXXXXX")
   previous=
   trap 'if [[ -n $candidate ]]; then unlink "$candidate"; fi; if [[ -n $previous ]]; then unlink "$previous"; fi' RETURN
-  printf '%s\n' "$mode" "$channel24" "$channel5" "$ssid" "$password" > "$candidate"
+  printf '%s\n' "$mode" "$channel24" "$channel5" "$ssid" "$password" "$uplink" > "$candidate"
   if cmp -s "$candidate" "$settings" ||
-     [[ ! -e $settings && $mode == auto && $channel24 == 0 && $channel5 == 0 && $ssid == 'NixOS Hotspot' && -z $password ]]; then
+     { [[ $uplink == auto ]] && cmp -s <(head -n 5 "$candidate") "$settings"; } ||
+     [[ ! -e $settings && $mode == auto && $channel24 == 0 && $channel5 == 0 &&
+        $ssid == 'NixOS Hotspot' && -z $password && $uplink == auto ]]; then
     return
   fi
   if [[ -f $settings ]]; then
@@ -193,8 +201,12 @@ aps_ready() {
 }
 
 case "$1" in
+  uplinks) list_uplinks; exit 0 ;;
+  mdns-firewall) mdns_firewall add; exit 0 ;;
   save) save_preferences; exit 0 ;;
   stop)
+    mdns_firewall remove
+    stop_uplink_routing
     for device in "${ap_devices[@]}"; do
       if [[ -e $RUNTIME_DIRECTORY/interface.$device ||
             ( $device == "${ap_devices[0]}" && -e $RUNTIME_DIRECTORY/interface ) ]] &&
@@ -202,6 +214,9 @@ case "$1" in
         iw dev "$device" del
       fi
     done
+    if [[ -e $RUNTIME_DIRECTORY/bridge && -e /sys/class/net/$bridge ]]; then
+      ip link del dev "$bridge"
+    fi
     exit 0
     ;;
   start) [[ $EUID == 0 ]] || fail '시스템 서비스로 핫스팟을 시작하세요.' ;;
@@ -235,14 +250,18 @@ if [[ -z $password ]]; then
 fi
 ssid_hex=$(printf '%s' "$ssid" | od -An -v -tx1 | tr -d '[:space:]')
 
+create_hotspot_bridge
+route_snapshot=
+if [[ $uplink != auto ]]; then
+  start_uplink_routing
+fi
+
 active_devices=()
 configs=()
-dns_args=()
 status=
 for index in "${!plan[@]}"; do
   read -r iface _ _ band channel <<< "${plan[$index]}"
   device=${ap_devices[$index]}
-  subnet="10.42.$((73 + index))"
   if [[ $band == 2.4 ]]; then
     hw_mode=g
   else
@@ -259,6 +278,7 @@ for index in "${!plan[@]}"; do
   cat > "$config" <<CONF
 interface=$device
 driver=nl80211
+bridge=$bridge
 ctrl_interface=$RUNTIME_DIRECTORY/hostapd
 ssid2=$ssid_hex
 hw_mode=$hw_mode
@@ -270,7 +290,6 @@ wpa_passphrase=$password
 CONF
   active_devices+=("$device")
   configs+=("$config")
-  dns_args+=("--interface=$device" "--listen-address=$subnet.1" "--dhcp-range=$subnet.10,$subnet.200,12h")
   status+="${status:+  ·  }$band GHz / $channel"
 done
 
@@ -285,21 +304,39 @@ until aps_ready; do
   sleep 0.1
 done
 
-for index in "${!active_devices[@]}"; do
-  ip address add "10.42.$((73 + index)).1/24" dev "${active_devices[$index]}"
-done
-dnsmasq --keep-in-foreground --conf-file=/dev/null --bind-interfaces --except-interface=lo --leasefile-ro "${dns_args[@]}" &
+dns_args=()
+if [[ $uplink != auto ]]; then
+  # Clients send DNS directly through the selected routing policy.
+  dns_args+=(--port=0 "--dhcp-option=option:dns-server$(selected_dns)")
+fi
+subnet=${gateway%.*}
+dnsmasq --keep-in-foreground --conf-file=/dev/null --bind-interfaces --except-interface=lo --leasefile-ro \
+  --interface="$bridge" --listen-address="$gateway" --dhcp-range="$subnet.10,$subnet.200,12h" "${dns_args[@]}" &
 dhcp_pid=$!
 sleep 0.2
 kill -0 "$dhcp_pid" 2>/dev/null || fail '핫스팟의 DHCP와 DNS를 시작하지 못했습니다.'
+mdns_current=
+mdns_pid=
+refresh_mdns
+status+="  ·  $gateway"
+if [[ $uplink != auto ]]; then
+  status+="  ·  $uplink"
+fi
 printf '%s\n' "$ssid" "$status" > "$RUNTIME_DIRECTORY/status"
 printf '%s\n' "$password" > "$RUNTIME_DIRECTORY/password"
 chmod 0640 "$RUNTIME_DIRECTORY/status" "$RUNTIME_DIRECTORY/password"
 systemd-notify --ready
 
 # Release the shared radio before it attempts to associate on a different channel.
+ticks=0
 while kill -0 "$ap_pid" 2>/dev/null && kill -0 "$dhcp_pid" 2>/dev/null; do
   links_unchanged || exit 0
+  if [[ $uplink != auto ]]; then
+    refresh_uplink_routes
+  fi
+  if (( ++ticks % 3 == 0 )); then
+    refresh_mdns
+  fi
   sleep 1
 done
 fail '핫스팟 서비스가 중단되었습니다.'

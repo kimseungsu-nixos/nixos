@@ -1,8 +1,8 @@
 diff --git a/assets/translations/en.json b/assets/translations/en.json
-index 4fa12b3..1a38423 100644
+index 4fa12b3..80f0a6c 100644
 --- a/assets/translations/en.json
 +++ b/assets/translations/en.json
-@@ -408,7 +408,19 @@
+@@ -408,7 +408,21 @@
        "error-missing-password": "Enter your password.",
        "error-unsupported-phase2": "PEAP requires MSCHAPv2 inner authentication.",
        "external-ip": "WAN {ip}",
@@ -19,14 +19,16 @@ index 4fa12b3..1a38423 100644
 +      "hotspot-name": "Network name",
 +      "hotspot-settings": "Hotspot settings",
 +      "hotspot-show-password": "Show or hide hotspot password",
++      "hotspot-uplink": "Share from",
++      "hotspot-uplink-offline": "{device} (disconnected)",
        "identity": "Identity",
        "no-networks": "No networks in range",
        "not-connected": "Not connected",
 diff --git a/assets/translations/ko.json b/assets/translations/ko.json
-index d96586c..8c851d3 100644
+index d96586c..9a085f0 100644
 --- a/assets/translations/ko.json
 +++ b/assets/translations/ko.json
-@@ -325,6 +325,18 @@
+@@ -325,6 +325,20 @@
        "enterprise-prompt-for": "{ssid}로 로그인",
        "error-missing-password": "비밀번호를 입력하세요.",
        "external-ip": "WAN {ip}",
@@ -42,14 +44,16 @@ index d96586c..8c851d3 100644
 +      "hotspot-name": "네트워크 이름",
 +      "hotspot-settings": "핫스팟 설정",
 +      "hotspot-show-password": "핫스팟 암호 표시 또는 숨기기",
++      "hotspot-uplink": "공유할 네트워크",
++      "hotspot-uplink-offline": "{device} (연결 끊김)",
        "no-networks": "범위 내에 네트워크 없음",
        "not-connected": "연결되지 않음",
        "password": "비밀번호",
 diff --git a/src/shell/control_center/tabs/network_tab.cpp b/src/shell/control_center/tabs/network_tab.cpp
-index bcae3dc..acdaf4a 100644
+index bcae3dc..a608ca9 100644
 --- a/src/shell/control_center/tabs/network_tab.cpp
 +++ b/src/shell/control_center/tabs/network_tab.cpp
-@@ -1,22 +1,29 @@
+@@ -1,24 +1,32 @@
  #include "shell/control_center/tabs/network_tab.h"
  
 +#include "core/deferred_call.h"
@@ -78,8 +82,11 @@ index bcae3dc..acdaf4a 100644
 +#include <fstream>
  #include <map>
  #include <memory>
++#include <sstream>
  #include <string>
-@@ -29,6 +36,28 @@ using namespace control_center;
+ #include <string_view>
+ #include <utility>
+@@ -29,6 +37,28 @@ using namespace control_center;
  namespace {
  
    constexpr float kRowMinHeight = Style::controlHeightLg;
@@ -108,7 +115,7 @@ index bcae3dc..acdaf4a 100644
  
    // Label and wire value in one row, so the visible dropdown order and the value
    // sent to NetworkManager cannot drift apart.
-@@ -647,6 +676,7 @@ NetworkTab::NetworkTab(
+@@ -647,6 +677,7 @@ NetworkTab::NetworkTab(
  }
  
  NetworkTab::~NetworkTab() {
@@ -116,7 +123,7 @@ index bcae3dc..acdaf4a 100644
    if (m_secrets != nullptr) {
      m_secrets->setRequestCallback(nullptr);
      m_secrets->cancelSecret();
-@@ -917,6 +947,7 @@ std::unique_ptr<Flex> NetworkTab::create() {
+@@ -917,6 +948,7 @@ std::unique_ptr<Flex> NetworkTab::create() {
    scrollContent->setAlign(FlexAlign::Stretch);
    scrollContent->setGap(Style::spaceMd * scale);
    scrollContent->addChild(std::move(passwordCard));
@@ -124,7 +131,7 @@ index bcae3dc..acdaf4a 100644
    scrollContent->addChild(
        ui::column({
            .out = &m_list,
-@@ -936,6 +967,16 @@ void NetworkTab::setActive(bool active) {
+@@ -936,6 +968,16 @@ void NetworkTab::setActive(bool active) {
      return;
    }
    m_active = active;
@@ -141,7 +148,7 @@ index bcae3dc..acdaf4a 100644
    if (m_active && m_network != nullptr) {
      m_network->requestScan();
    }
-@@ -955,6 +996,7 @@ void NetworkTab::doLayout(Renderer& renderer, float contentWidth, float bodyHeig
+@@ -955,6 +997,7 @@ void NetworkTab::doLayout(Renderer& renderer, float contentWidth, float bodyHeig
    rebuildApList(renderer);
    syncApRows();
    syncCellularCard();
@@ -149,7 +156,7 @@ index bcae3dc..acdaf4a 100644
    syncCurrentCard();
    m_rootLayout->layout(renderer);
  }
-@@ -966,6 +1008,9 @@ void NetworkTab::doUpdate(Renderer& renderer) {
+@@ -966,6 +1009,9 @@ void NetworkTab::doUpdate(Renderer& renderer) {
    // A signal percent's text changes its width, so the list has to be laid out again.
    bool listChanged = syncApRows();
    listChanged = syncCellularCard() || listChanged;
@@ -159,7 +166,7 @@ index bcae3dc..acdaf4a 100644
    if (listChanged && m_list != nullptr) {
      m_list->layout(renderer);
    }
-@@ -996,6 +1041,20 @@ void NetworkTab::onClose() {
+@@ -996,6 +1042,21 @@ void NetworkTab::onClose() {
    m_list = nullptr;
    m_rescanButton = nullptr;
    m_wifiToggle = nullptr;
@@ -174,13 +181,14 @@ index bcae3dc..acdaf4a 100644
 +  m_hotspotBand = nullptr;
 +  m_hotspotChannel24 = nullptr;
 +  m_hotspotChannel5 = nullptr;
++  m_hotspotUplink = nullptr;
 +  m_hotspotTimer.stop();
 +  m_hotspotEditing = false;
 +  m_hotspotPassword.clear();
    m_scanSpinner = nullptr;
    m_currentRow = nullptr;
    m_disconnectButton = nullptr;
-@@ -1016,6 +1075,267 @@ void NetworkTab::onClose() {
+@@ -1016,6 +1077,297 @@ void NetworkTab::onClose() {
    ++m_wifiToggleRequestGeneration;
  }
  
@@ -296,6 +304,12 @@ index bcae3dc..acdaf4a 100644
 +      .selectedIndex = 0U,
 +      .flexGrow = 1.0F,
 +  }));
++  addField(i18n::tr("control-center.network.hotspot-uplink"), ui::select({
++      .out = &m_hotspotUplink,
++      .options = std::vector<std::string>{i18n::tr("control-center.network.hotspot-auto")},
++      .selectedIndex = 0U,
++      .flexGrow = 1.0F,
++  }));
 +  form->addChild(ui::label({
 +      .text = i18n::tr("control-center.network.hotspot-channel-hint"),
 +      .fontSize = Style::fontSizeCaption * scale,
@@ -334,6 +348,7 @@ index bcae3dc..acdaf4a 100644
 +  m_hotspotBand->setEnabled(!pending);
 +  m_hotspotChannel24->setEnabled(!pending && (band == 1U || band == 3U));
 +  m_hotspotChannel5->setEnabled(!pending && (band == 2U || band == 3U));
++  m_hotspotUplink->setEnabled(!pending);
 +  m_hotspotSaveButton->setEnabled(!pending);
 +  m_hotspotRevealButton->setVisible(active);
 +  m_hotspotRevealButton->setGlyph(m_hotspotPassword.empty() ? "eye" : "eye-off");
@@ -361,7 +376,7 @@ index bcae3dc..acdaf4a 100644
 +}
 +
 +void NetworkTab::loadHotspotSettings() {
-+  std::array<std::string, 5> values{"auto", "0", "0", "NixOS Hotspot", ""};
++  std::array<std::string, 6> values{"auto", "0", "0", "NixOS Hotspot", "", "auto"};
 +  std::ifstream settings(FileUtils::configDir() + "/hotspot.conf");
 +  std::string line;
 +  for (auto& value : values) {
@@ -374,6 +389,28 @@ index bcae3dc..acdaf4a 100644
 +  m_hotspotChannel5->setSelectedIndexSilently(hotspotOption(kChannels5, values[2]));
 +  m_hotspotName->setValue(values[3]);
 +  m_hotspotPassphrase->setValue(values[4]);
++
++  const auto uplinks = process::runSyncWithTimeout({"noctalia-hotspot-service", "uplinks"}, std::chrono::milliseconds(500));
++  m_hotspotUplinkIds = {"auto"};
++  std::vector<std::string> labels{i18n::tr("control-center.network.hotspot-auto")};
++  std::istringstream rows(uplinks.out);
++  while (std::getline(rows, line)) {
++    const auto separator = line.find('\t');
++    if (separator == std::string::npos || separator == 0U) {
++      continue;
++    }
++    const std::string id = line.substr(0, separator);
++    const std::string name = line.substr(separator + 1);
++    m_hotspotUplinkIds.push_back(id);
++    labels.push_back(name.empty() || name == id ? id : name + " (" + id + ")");
++  }
++  const std::string& selected = values[5];
++  if (!selected.empty() && std::ranges::find(m_hotspotUplinkIds, selected) == m_hotspotUplinkIds.end()) {
++    m_hotspotUplinkIds.push_back(selected);
++    labels.push_back(i18n::tr("control-center.network.hotspot-uplink-offline", "device", selected));
++  }
++  m_hotspotUplink->setOptions(std::move(labels));
++  m_hotspotUplink->setSelectedIndexSilently(hotspotOption(m_hotspotUplinkIds, selected));
 +}
 +
 +void NetworkTab::saveHotspotSettings() {
@@ -386,6 +423,7 @@ index bcae3dc..acdaf4a 100644
 +  settings += '\n';
 +  settings += optionAt(kChannels5, m_hotspotChannel5->selectedIndex());
 +  settings += '\n' + m_hotspotName->value() + '\n' + m_hotspotPassphrase->value() + '\n';
++  settings += optionAt(m_hotspotUplinkIds, m_hotspotUplink->selectedIndex()) + '\n';
 +  m_hotspotSaving = true;
 +  runHotspotCommand({"noctalia-hotspot-service", "save"}, std::move(settings));
 +}
@@ -448,7 +486,7 @@ index bcae3dc..acdaf4a 100644
  void NetworkTab::syncPasswordCard() {
    if (m_hasPendingSecret
        && !m_pendingAccessPoint.has_value()
-@@ -1822,6 +2142,10 @@ void NetworkTab::requestCellularEnabled(bool enabled) {
+@@ -1822,6 +2174,10 @@ void NetworkTab::requestCellularEnabled(bool enabled) {
  }
  
  void NetworkTab::onPanelCardOpacityChanged(float opacity) {
@@ -460,7 +498,7 @@ index bcae3dc..acdaf4a 100644
      m_passwordInput->setSurfaceOpacity(opacity);
    }
 diff --git a/src/shell/control_center/tabs/network_tab.h b/src/shell/control_center/tabs/network_tab.h
-index 0ddf4ea..03a24ce 100644
+index 0ddf4ea..68da77a 100644
 --- a/src/shell/control_center/tabs/network_tab.h
 +++ b/src/shell/control_center/tabs/network_tab.h
 @@ -48,6 +48,12 @@ private:
@@ -476,7 +514,7 @@ index 0ddf4ea..03a24ce 100644
    void beginPendingAction(bool wasConnected);
    void requestWirelessEnabled(bool enabled);
    void handleWirelessEnabledCompletion(std::uint64_t generation, bool success);
-@@ -113,6 +119,24 @@ private:
+@@ -113,6 +119,26 @@ private:
  
    Button* m_rescanButton = nullptr;
    Toggle* m_wifiToggle = nullptr;
@@ -491,6 +529,8 @@ index 0ddf4ea..03a24ce 100644
 +  Select* m_hotspotBand = nullptr;
 +  Select* m_hotspotChannel24 = nullptr;
 +  Select* m_hotspotChannel5 = nullptr;
++  Select* m_hotspotUplink = nullptr;
++  std::vector<std::string> m_hotspotUplinkIds{"auto"};
 +  bool m_hotspotActive = false;
 +  bool m_hotspotEditing = false;
 +  bool m_hotspotSaving = false;
@@ -501,7 +541,7 @@ index 0ddf4ea..03a24ce 100644
    Flex* m_currentRow = nullptr;
    Button* m_disconnectButton = nullptr;
    Spinner* m_scanSpinner = nullptr;
-@@ -161,4 +185,4 @@ private:
+@@ -161,4 +187,4 @@ private:
  
    static constexpr std::chrono::seconds kActionPendingTimeout = std::chrono::seconds(6);
    static constexpr std::chrono::seconds kCellularPendingTimeout = std::chrono::seconds(25);
