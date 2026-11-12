@@ -57,7 +57,7 @@
         widget_spacing = 8;
         start = [ "launcher" "workspaces" ];
         center = [ "clock" ];
-        end = [ "media" "tray" "network" "bluetooth" "volume" "battery" "notifications" "displays" "control-center" "session" ];
+        end = [ "media" "tray" "network" "hotspot" "bluetooth" "volume" "battery" "notifications" "displays" "control-center" "session" ];
       };
       widget.displays = {
         type = "raycursive/niri-displays:bar";
