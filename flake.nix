@@ -74,11 +74,80 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, ros2-elastic-dashboard, lan-mouse-niri, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, solidcraft, ... }: {
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, ros2-elastic-dashboard, lan-mouse-niri, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, solidcraft, ... }:
+  let
+    rosPkgs = nix-ros-overlay.legacyPackages.x86_64-linux;
+    ros = rosPkgs.rosPackages.lyrical;
+    inherit (nix-ros-overlay.inputs.nixpkgs.legacyPackages.x86_64-linux) lib makeWrapper python3;
+    rosPaths = with ros; [
+      desktop
+      hardware-interface
+      controller-manager
+      pluginlib
+      rclcpp-lifecycle
+      gpio-controllers
+    ];
+    rosEnv = ros.buildEnv { paths = rosPaths; };
+    rosUnderlay = ros.buildEnv {
+      underlay = true;
+      paths = [ rosPkgs.colcon ros.ament-cmake-core ros.python-cmake-module ] ++ rosPaths;
+      # Colcon chains the underlay into each workspace's generated setup scripts.
+      postBuild = ''
+        cat > "$out/local_setup.sh" <<'EOF'
+        _nix_ros_append() {
+          eval '_nix_ros_path=''${'"$1"'-}'
+          case ":$_nix_ros_path:" in
+            *":$2:"*) ;;
+            *) export "$1=''${_nix_ros_path:+$_nix_ros_path:}$2" ;;
+          esac
+        }
+
+        _nix_ros_append PATH @out@/bin
+        _nix_ros_append AMENT_PREFIX_PATH @out@
+        _nix_ros_append CMAKE_PREFIX_PATH @out@
+        _nix_ros_append LD_LIBRARY_PATH @out@/lib
+        _nix_ros_append PYTHONPATH @out@/${python3.sitePackages}
+        _nix_ros_append ROS_PACKAGE_PATH @out@/share
+        _nix_ros_append GZ_CONFIG_PATH @out@/share/gz
+        export ROS_DISTRO=${ros.ros-environment.rosDistro}
+        export ROS_VERSION=${toString ros.ros-environment.rosVersion}
+        export ROS_PYTHON_VERSION=${lib.versions.major python3.version}
+        unset -f _nix_ros_append
+        unset _nix_ros_path
+        EOF
+        substituteInPlace "$out/local_setup.sh" --replace-fail @out@ "$out"
+        ln -sfn local_setup.sh "$out/local_setup.bash"
+        ln -sfn local_setup.sh "$out/local_setup.zsh"
+      '';
+    };
+    rosDevShell = nix-ros-overlay.devShells.x86_64-linux.example-ros2-desktop-lyrical.overrideAttrs (_: {
+      nativeBuildInputs = [ rosUnderlay ];
+    });
+    colconRos2 = rosDevShell.stdenv.mkDerivation {
+      name = "colcon-ros2";
+      nativeBuildInputs = rosDevShell.nativeBuildInputs ++ [ makeWrapper ];
+      inherit (rosDevShell) buildInputs;
+      buildCommand = ''
+        # Keep the ROS development shell's toolchain and dependency paths local to colcon.
+        wrapperArgs=(--prefix PATH : "$PATH")
+        for var in CMAKE_PREFIX_PATH CMAKE_INCLUDE_PATH CMAKE_LIBRARY_PATH \
+            NIXPKGS_CMAKE_PREFIX_PATH PKG_CONFIG_PATH; do
+          wrapperArgs+=(--suffix "$var" : "''${!var-}")
+        done
+        makeWrapper "$(command -v colcon)" "$out/bin/colcon" \
+          "''${wrapperArgs[@]}" \
+          --suffix NIX_CFLAGS_COMPILE ' ' "''${NIX_CFLAGS_COMPILE-}" \
+          --suffix NIX_LDFLAGS ' ' "''${NIX_LDFLAGS-}"
+      '';
+    };
+  in {
     packages.x86_64-linux.lan-mouse-niri = import ./packages/lan-mouse.nix {
       inherit lan-mouse-niri;
       system = "x86_64-linux";
     };
+    packages.x86_64-linux.colcon-ros2 = colconRos2;
+    devShells.x86_64-linux.ros2 = rosDevShell;
+
     # nixos-rebuild switch --flake .#linux
     # `nixos` is an alias: nixos-rebuild looks up the *current* hostname.
     nixosConfigurations = rec {
@@ -101,7 +170,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx nix-ros-overlay ros2-elastic-dashboard lan-mouse-niri solidcraft; };
+              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx rosEnv ros2-elastic-dashboard lan-mouse-niri solidcraft colconRos2; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";

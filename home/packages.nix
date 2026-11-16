@@ -1,7 +1,5 @@
-{ pkgs, solidcraft, nix-ros-overlay, ros2-elastic-dashboard, ... }:
+{ pkgs, solidcraft, rosEnv, ros2-elastic-dashboard, colconRos2, ... }:
 let
-  rosPkgs = nix-ros-overlay.legacyPackages.${pkgs.stdenv.hostPlatform.system};
-  ros = rosPkgs.rosPackages.lyrical;
   # Puts an image on the clipboard as PNG and BMP (Wine programs paste the BMP).
   copyImage = pkgs.callPackage ./copy-image { };
   # Antigravity opens OAuth pages through xdg-open. Put an app-local shim first in PATH so only
@@ -19,6 +17,9 @@ let
   '';
 in
 {
+  # Bash loads the ROS 2 completion hook on the first completion request.
+  xdg.dataFile."bash-completion/completions/ros2".source =
+    "${rosEnv}/share/ros2cli/environment/ros2-argcomplete.bash";
 
   # User-level GUI applications.
   home.packages = with pkgs; [
@@ -37,8 +38,12 @@ in
     vlc
     putty
     solidcraft.packages.${pkgs.stdenv.hostPlatform.system}.solidcraft
-    (ros.buildEnv { paths = [ ros.desktop ]; })
-    rosPkgs.colcon
+    rosEnv
+    colconRos2
+    # Toolchain for building ROS packages with colcon and CMake.
+    cmake
+    gnumake
+    stdenv.cc
     ros2-elastic-dashboard.packages.${pkgs.stdenv.hostPlatform.system}.default
     kicad
     arduino-ide
