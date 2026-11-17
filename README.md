@@ -22,15 +22,19 @@ Noctalia shell.
 
 ## Notes
 
-- Nix runs one local build at a time with four compiler jobs. The daemon has a
-  four-core CPU quota and lower scheduling priority to keep the desktop responsive.
+- Nix runs two local builds at a time with four compiler jobs each. The daemon has an
+  eight-core CPU quota and lower scheduling priority to keep the desktop responsive.
+  The rebuild script also puts the complete root build process in an eight-core
+  systemd scope, since root builds can bypass nix-daemon.
 
 - `hnc2020` (Hancom Office) is a private repo fetched over HTTPS with the git
   credentials from `gh auth login`. The rebuild script updates the flake as your
-  user before invoking `nixos-rebuild --sudo`; `./scripts/rebuild.sh build` builds
+  user before invoking the root rebuild in a limited systemd scope; `./scripts/rebuild.sh build` builds
   without switching, while `./scripts/rebuild.sh switch` applies the system.
 - ROS 2 Lyrical Desktop is installed in the user environment from `nix-ros-overlay`.
-  The overlay keeps its tested nixpkgs input separate from the system channel.
+  `colcon build` loads the pinned ROS development environment automatically. Use
+  `colcon build --cmake-clean-cache` if the workspace cached a different compiler or ROS prefix.
+  For direct access to that toolchain, run `nix develop ~/github/kimseungsu-nixos/nixos#ros2`.
 - Old builds are cleaned up automatically: a weekly `nix.gc` deletes
   generations older than 7 days and `/boot` keeps the last 5.
 - Screenshots (`Print`, `Mod+Shift+S`) go to `~/Pictures/Screenshots` and onto the clipboard as

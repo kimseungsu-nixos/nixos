@@ -78,7 +78,7 @@
   let
     rosPkgs = nix-ros-overlay.legacyPackages.x86_64-linux;
     ros = rosPkgs.rosPackages.lyrical;
-    inherit (nix-ros-overlay.inputs.nixpkgs.legacyPackages.x86_64-linux) lib makeWrapper python3;
+    inherit (nix-ros-overlay.inputs.nixpkgs.legacyPackages.x86_64-linux) lib makeWrapper python3 runtimeShell;
     rosPaths = with ros; [
       desktop
       hardware-interface
@@ -88,7 +88,7 @@
       gpio-controllers
     ];
     rosEnv = ros.buildEnv { paths = rosPaths; };
-    rosUnderlay = ros.buildEnv {
+    rosUnderlay = (ros.buildEnv {
       underlay = true;
       paths = [ rosPkgs.colcon ros.ament-cmake-core ros.python-cmake-module ] ++ rosPaths;
       # Colcon chains the underlay into each workspace's generated setup scripts.
@@ -119,7 +119,17 @@
         ln -sfn local_setup.sh "$out/local_setup.bash"
         ln -sfn local_setup.sh "$out/local_setup.zsh"
       '';
-    };
+    }).overrideAttrs (old: {
+      postFixup = (old.postFixup or "") + ''
+        # Limit the complete colcon process tree, including CMake and compiler jobs.
+        mv "$out/bin/colcon" "$out/bin/.colcon-wrapped"
+        cat > "$out/bin/colcon" <<EOF
+        #!${runtimeShell}
+        exec systemd-run --user --scope --quiet --property=CPUQuota=800% -- "$out/bin/.colcon-wrapped" "\$@"
+        EOF
+        chmod +x "$out/bin/colcon"
+      '';
+    });
     rosDevShell = nix-ros-overlay.devShells.x86_64-linux.example-ros2-desktop-lyrical.overrideAttrs (_: {
       nativeBuildInputs = [ rosUnderlay ];
     });

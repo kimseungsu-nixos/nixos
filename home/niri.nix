@@ -20,6 +20,10 @@ let
         }
     }
 
+    clipboard {
+        disable-primary
+    }
+
     cursor {
         xcursor-theme "catppuccin-mocha-mauve-cursors"
         xcursor-size 24

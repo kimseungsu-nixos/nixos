@@ -17,6 +17,10 @@ let
   '';
 in
 {
+  # SolidCraft looks for CJK fonts in fixed directories rather than via fontconfig.
+  home.file.".local/share/fonts/SolidCraft-NotoSansCJK.ttc".source =
+    "${pkgs.noto-fonts-cjk-sans}/share/fonts/opentype/noto-cjk/NotoSansCJK-VF.otf.ttc";
+
   # Bash loads the ROS 2 completion hook on the first completion request.
   xdg.dataFile."bash-completion/completions/ros2".source =
     "${rosEnv}/share/ros2cli/environment/ros2-argcomplete.bash";

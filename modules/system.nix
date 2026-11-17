@@ -106,8 +106,8 @@
   nixpkgs.config.allowUnfree = true;
 
   nix.settings = {
-    # One build at a time, with at most four parallel compiler jobs per build.
-    max-jobs = 1;
+    # Two builds at a time, with at most four parallel compiler jobs per build.
+    max-jobs = 2;
     cores = 4;
     extra-substituters = [ "https://noctalia.cachix.org" "https://ros.cachix.org" ];
     extra-trusted-public-keys = [
@@ -118,7 +118,7 @@
 
   # Enforce the CPU budget even when a build tool ignores NIX_BUILD_CORES.
   systemd.services.nix-daemon.serviceConfig = {
-    CPUQuota = "400%";
+    CPUQuota = "800%";
     CPUWeight = 25;
     Nice = 10;
   };

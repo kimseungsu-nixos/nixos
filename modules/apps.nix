@@ -76,6 +76,9 @@ in
   # Studica Titan Config & Update App (udev rules for 0483:5740 / df11, dfu-util).
   programs.titan-config.enable = true;
 
+  # Register the DreamSourceLab USB rules bundled with DSView.
+  services.udev.packages = [ pkgs.dsview ];
+
   # podman/distrobox for containers (WPILib VMX 2020 itself runs natively, see home/wpilib-vmx.nix).
   # hardware.graphics exposes Mesa at /run/opengl-driver, which distrobox bind-mounts into a container.
   virtualisation.podman.enable = true;
@@ -97,6 +100,7 @@ in
   # services.xserver.enable pulls in xterm by default.
   services.xserver.excludePackages = [ pkgs.xterm ];
 
+  programs.gnome-disks.enable = true;
   # Nautilus uses UDisks/GVFS from modules/desktop.nix for removable media.
   programs.nautilus-open-any-terminal = {
     enable = true;
@@ -128,8 +132,7 @@ in
   # allowed through; any other insecure package is still refused.
   nixpkgs.config.allowInsecurePredicate = pkg: lib.hasPrefix "ventoy" (lib.getName pkg);
 
-  # CLI tools and anything the system itself needs. GUI apps live in
-  # home/packages.nix.
+  # CLI tools and desktop file handlers. Other GUI apps live in home/packages.nix.
   environment.systemPackages = with pkgs; [
     wget
     git
@@ -138,12 +141,14 @@ in
     distrobox
     nodejs
     python3
+    dsview
     rpiImager   # Raspberry Pi Imager, always as root
     ventoy-full-gtk  # bootable USB creator (run with sudo or via polkit)
     nautilus
-    # Archives: Xarchiver is the GUI; the others are what it calls. unar copes with legacy Korean
-    # (CP949) file names in zip files, which 7-Zip and unzip turn into garbage.
-    xarchiver
+    file-roller
+    loupe
+    # Official 7-Zip backend. Keep unar for legacy Korean (CP949) ZIP filenames.
+    _7zz
     zip
     unzip
     p7zip

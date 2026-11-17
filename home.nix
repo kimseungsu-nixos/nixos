@@ -83,14 +83,22 @@
     $DRY_RUN_CMD ${pkgs.xdg-utils}/bin/xdg-mime default org.gnome.Nautilus.desktop inode/directory
   '';
 
-  # Archives open in Xarchiver (zip, 7z, rar, tar and friends).
-  home.activation.defaultArchiver = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    for type in application/zip application/x-7z-compressed application/vnd.rar application/x-rar \
-        application/x-tar application/gzip application/x-compressed-tar application/x-bzip2 \
-        application/x-bzip-compressed-tar application/x-xz application/x-xz-compressed-tar \
-        application/zstd application/x-zstd-compressed-tar application/x-iso9660-image; do
-      $DRY_RUN_CMD ${pkgs.xdg-utils}/bin/xdg-mime default xarchiver.desktop "$type"
-    done
+  home.activation.defaultFileApps = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    $DRY_RUN_CMD ${pkgs.xdg-utils}/bin/xdg-mime default org.gnome.FileRoller.desktop \
+      application/zip application/x-7z-compressed application/vnd.rar application/x-rar \
+      application/x-tar application/gzip application/x-compressed-tar application/x-bzip2 \
+      application/x-bzip-compressed-tar application/x-bzip2-compressed-tar \
+      application/x-xz application/x-xz-compressed-tar application/zstd \
+      application/x-zstd-compressed-tar application/x-raw-disk-image-xz-compressed
+
+    $DRY_RUN_CMD ${pkgs.xdg-utils}/bin/xdg-mime default org.gnome.Loupe.desktop \
+      image/jpeg image/png image/apng image/webp image/gif image/bmp image/tiff \
+      image/svg+xml image/svg+xml-compressed image/avif image/heic image/jxl
+
+    # Disk Image Mounter attaches images read-only. Keep the legacy ISO MIME key in sync.
+    $DRY_RUN_CMD ${pkgs.xdg-utils}/bin/xdg-mime default gnome-disk-image-mounter.desktop \
+      application/vnd.efi.iso application/x-cd-image application/x-iso9660-image \
+      application/vnd.efi.img application/x-raw-disk-image
   '';
 
   # GTK look for GTK apps: dark adw-gtk3 with Papirus icons using
