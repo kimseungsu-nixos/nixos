@@ -78,17 +78,42 @@
   let
     rosPkgs = nix-ros-overlay.legacyPackages.x86_64-linux;
     ros = rosPkgs.rosPackages.lyrical;
-    inherit (nix-ros-overlay.inputs.nixpkgs.legacyPackages.x86_64-linux) lib makeWrapper python3 runtimeShell;
+    inherit (nix-ros-overlay.inputs.nixpkgs.legacyPackages.x86_64-linux) lib makeWrapper python3 symlinkJoin;
+    rosboard = ros.buildRosPackage {
+      pname = "ros-lyrical-rosboard";
+      version = "1.3.1";
+      src = (builtins.fetchTree {
+        type = "github";
+        owner = "dheera";
+        repo = "rosboard";
+        # Includes the NumPy 2 PointCloud2 fix.
+        rev = "4407d8e629e35e26547bbf8f9f62bb29e7606614";
+      }).outPath;
+      buildType = "ament_python";
+      propagatedBuildInputs = [
+        ros.rclpy
+        ros.rosidl-runtime-py
+      ] ++ (with ros.python3Packages; [ numpy pillow psutil tornado ]);
+
+      postInstall = ''
+        cp -r launch "$out/share/rosboard/"
+        test -x "$out/lib/rosboard/rosboard_node"
+        test -f "$out/share/ament_index/resource_index/packages/rosboard"
+        test -f "$out/${ros.python3.sitePackages}/rosboard/html/index.html"
+      '';
+    };
     rosPaths = with ros; [
       desktop
+      ros2-control
+      ros2-controllers
       hardware-interface
       controller-manager
       pluginlib
       rclcpp-lifecycle
       gpio-controllers
     ];
-    rosEnv = ros.buildEnv { paths = rosPaths; };
-    rosUnderlay = (ros.buildEnv {
+    rosEnv = ros.buildEnv { paths = rosPaths ++ [ rosboard ]; };
+    rosUnderlay = ros.buildEnv {
       underlay = true;
       paths = [ rosPkgs.colcon ros.ament-cmake-core ros.python-cmake-module ] ++ rosPaths;
       # Colcon chains the underlay into each workspace's generated setup scripts.
@@ -119,17 +144,7 @@
         ln -sfn local_setup.sh "$out/local_setup.bash"
         ln -sfn local_setup.sh "$out/local_setup.zsh"
       '';
-    }).overrideAttrs (old: {
-      postFixup = (old.postFixup or "") + ''
-        # Limit the complete colcon process tree, including CMake and compiler jobs.
-        mv "$out/bin/colcon" "$out/bin/.colcon-wrapped"
-        cat > "$out/bin/colcon" <<EOF
-        #!${runtimeShell}
-        exec systemd-run --user --scope --quiet --property=CPUQuota=800% -- "$out/bin/.colcon-wrapped" "\$@"
-        EOF
-        chmod +x "$out/bin/colcon"
-      '';
-    });
+    };
     rosDevShell = nix-ros-overlay.devShells.x86_64-linux.example-ros2-desktop-lyrical.overrideAttrs (_: {
       nativeBuildInputs = [ rosUnderlay ];
     });
@@ -156,6 +171,11 @@
       system = "x86_64-linux";
     };
     packages.x86_64-linux.colcon-ros2 = colconRos2;
+    packages.x86_64-linux.rosboard = rosboard;
+    packages.x86_64-linux.ros2 = symlinkJoin {
+      name = "ros2-lyrical";
+      paths = [ rosEnv colconRos2 ];
+    };
     devShells.x86_64-linux.ros2 = rosDevShell;
 
     # nixos-rebuild switch --flake .#linux

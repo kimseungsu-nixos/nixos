@@ -3,10 +3,6 @@
 NixOS flake for the `linux` machine: niri (scrollable-tiling Wayland compositor) with the
 Noctalia shell.
 
-```bash
-./scripts/rebuild.sh switch
-```
-
 ## Layout
 
 | Path | What |
@@ -22,19 +18,20 @@ Noctalia shell.
 
 ## Notes
 
-- Nix runs two local builds at a time with four compiler jobs each. The daemon has an
-  eight-core CPU quota and lower scheduling priority to keep the desktop responsive.
-  The rebuild script also puts the complete root build process in an eight-core
-  systemd scope, since root builds can bypass nix-daemon.
+- The Nix daemon and rebuild script use the available logical CPU count for local build concurrency
+  and per-build parallelism.
 
 - `hnc2020` (Hancom Office) is a private repo fetched over HTTPS with the git
-  credentials from `gh auth login`. The rebuild script updates the flake as your
-  user before invoking the root rebuild in a limited systemd scope; `./scripts/rebuild.sh build` builds
-  without switching, while `./scripts/rebuild.sh switch` applies the system.
+  credentials from `gh auth login`. `./scripts/rebuild.sh build` builds without switching,
+  and `./scripts/rebuild.sh switch` applies the system. Both use the current lock file.
+  Use `./scripts/rebuild.sh switch --update` to refresh the flake inputs before rebuilding.
 - ROS 2 Lyrical Desktop is installed in the user environment from `nix-ros-overlay`.
+  Run `ros2 run rosboard rosboard_node` and open `http://localhost:8888` to view ROS 2 topics.
   `colcon build` loads the pinned ROS development environment automatically. Use
   `colcon build --cmake-clean-cache` if the workspace cached a different compiler or ROS prefix.
-  For direct access to that toolchain, run `nix develop ~/github/kimseungsu-nixos/nixos#ros2`.
+  To use the matching `colcon` from an existing workspace without switching the system, run
+  `nix shell ~/github/kimseungsu-nixos/nixos#ros2 --command colcon build --cmake-clean-cache`.
+  For direct `cmake` commands, use `nix develop ~/github/kimseungsu-nixos/nixos#ros2`.
 - Old builds are cleaned up automatically: a weekly `nix.gc` deletes
   generations older than 7 days and `/boot` keeps the last 5.
 - Screenshots (`Print`, `Mod+Shift+S`) go to `~/Pictures/Screenshots` and onto the clipboard as
@@ -68,12 +65,6 @@ the `wpilib2020-vmx` package of the `nix-frc2020-vmx` input from the `nix-frc202
 (`wpilibcode2020_vmx`, `wpilib-elastic`, `wpilib-shell`; menu entries "WPILib VS Code 2020_vmx" and
 "WPILib Elastic NT3 2020_vmx"). The old Ubuntu distrobox container (`scripts/nixos-distrobox.sh` in the
 installer repo) is no longer needed; podman and distrobox stay installed.
-
-## Flake updates when rebuilding
-
-Run `./scripts/rebuild.sh build` to build or `./scripts/rebuild.sh switch` to apply. The script
-updates `flake.lock` first and stops if the network or updated flake evaluation fails. There is
-no scheduled or boot-time flake update.
 
 ## Keyboard and mouse sharing with Windows
 
