@@ -1,4 +1,4 @@
-{ pkgs, solidcraft, rosEnv, ros2-elastic-dashboard, colconRos2, ... }:
+{ pkgs, rosEnv, ros2-elastic-dashboard, colconRos2, ... }:
 let
   # Puts an image on the clipboard as PNG and BMP (Wine programs paste the BMP).
   copyImage = pkgs.callPackage ./copy-image { };
@@ -17,10 +17,6 @@ let
   '';
 in
 {
-  # SolidCraft looks for CJK fonts in fixed directories rather than via fontconfig.
-  home.file.".local/share/fonts/SolidCraft-NotoSansCJK.ttc".source =
-    "${pkgs.noto-fonts-cjk-sans}/share/fonts/opentype/noto-cjk/NotoSansCJK-VF.otf.ttc";
-
   # Bash loads the ROS 2 completion hook on the first completion request.
   xdg.dataFile."bash-completion/completions/ros2".source =
     "${rosEnv}/share/ros2cli/environment/ros2-argcomplete.bash";
@@ -41,7 +37,6 @@ in
     spotify
     vlc
     putty
-    solidcraft.packages.${pkgs.stdenv.hostPlatform.system}.solidcraft
     rosEnv
     colconRos2
     # Toolchain for building ROS packages with colcon and CMake.

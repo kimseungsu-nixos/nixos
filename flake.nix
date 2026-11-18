@@ -11,12 +11,6 @@
     # Matches system.stateVersion in configuration.nix.
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
-    # SolidCraft parametric 3D CAD application (desktop and CLI).
-    solidcraft = {
-      url = "github:tangency-labs/solidcraft";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # Hancom Office 2020 (private repo fetched with the configured GitHub credentials). Only the
     # package definition lives there; the installer is downloaded by the build from a pinned URL.
     # It brings its own nixpkgs pins for 19.09 libraries.
@@ -74,7 +68,7 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, ros2-elastic-dashboard, lan-mouse-niri, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, solidcraft, ... }:
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, ros2-elastic-dashboard, lan-mouse-niri, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, ... }:
   let
     rosPkgs = nix-ros-overlay.legacyPackages.x86_64-linux;
     ros = rosPkgs.rosPackages.lyrical;
@@ -200,7 +194,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx rosEnv ros2-elastic-dashboard lan-mouse-niri solidcraft colconRos2; };
+              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx rosEnv ros2-elastic-dashboard lan-mouse-niri colconRos2; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";

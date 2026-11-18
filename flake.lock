@@ -636,7 +636,6 @@
         "noctalia": "noctalia",
         "omp": "omp",
         "ros2-elastic-dashboard": "ros2-elastic-dashboard",
-        "solidcraft": "solidcraft",
         "zen-browser": "zen-browser"
       }
     },
@@ -713,26 +712,6 @@
       "original": {
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "type": "github"
-      }
-    },
-    "solidcraft": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1794970105,
-        "narHash": "sha256-UMkwRqdn94Efg3C740XTCgQszg2Doff9x6Irn8Ee89k=",
-        "owner": "tangency-labs",
-        "repo": "solidcraft",
-        "rev": "27cbf2e47d58437228270cd5f8698cef90e23f13",
-        "type": "github"
-      },
-      "original": {
-        "owner": "tangency-labs",
-        "repo": "solidcraft",
         "type": "github"
       }
     },
