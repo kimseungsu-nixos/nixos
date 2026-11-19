@@ -66,25 +66,6 @@
         "type": "github"
       }
     },
-    "codex-desktop-linux": {
-      "inputs": {
-        "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs_2"
-      },
-      "locked": {
-        "lastModified": 1794957542,
-        "narHash": "sha256-EAeIovVaSr1ExHZIWWKiuG8qh28FyRx/ozn3sUpuipU=",
-        "owner": "ilysenko",
-        "repo": "codex-desktop-linux",
-        "rev": "6175ccd9c64857e1cf7105a86ca788c29e107d99",
-        "type": "github"
-      },
-      "original": {
-        "owner": "ilysenko",
-        "repo": "codex-desktop-linux",
-        "type": "github"
-      }
-    },
     "crane": {
       "locked": {
         "lastModified": 1789760033,
@@ -141,24 +122,6 @@
       "original": {
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "type": "github"
-      }
-    },
-    "flake-utils": {
-      "inputs": {
-        "systems": "systems"
-      },
-      "locked": {
-        "lastModified": 1731533236,
-        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "flake-utils",
         "type": "github"
       }
     },
@@ -470,22 +433,6 @@
         "type": "github"
       }
     },
-    "nixpkgs_2": {
-      "locked": {
-        "lastModified": 1772773019,
-        "narHash": "sha256-E1bxHxNKfDoQUuvriG71+f+s/NT0qWkImXsYZNFFfCs=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "aca4d95fce4914b3892661bcb80b8087293536c6",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixos-unstable",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "nixpkgs_3": {
       "locked": {
         "lastModified": 1791048980,
@@ -609,7 +556,6 @@
     "root": {
       "inputs": {
         "claude-desktop": "claude-desktop",
-        "codex-desktop-linux": "codex-desktop-linux",
         "hnc2020": "hnc2020",
         "home-manager": "home-manager",
         "lan-mouse-niri": "lan-mouse-niri",
@@ -617,6 +563,7 @@
         "nix-packages": "nix-packages",
         "nix-ros-overlay": "nix-ros-overlay",
         "nixpkgs": "nixpkgs_5",
+        "nixpkgs-chatgpt": "nixpkgs_6",
         "noctalia": "noctalia",
         "omp": "omp",
         "zen-browser": "zen-browser"
@@ -677,21 +624,6 @@
       "original": {
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "type": "github"
-      }
-    },
-    "systems": {
-      "locked": {
-        "lastModified": 1681028828,
-        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
-        "owner": "nix-systems",
-        "repo": "default",
-        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-systems",
-        "repo": "default",
         "type": "github"
       }
     },

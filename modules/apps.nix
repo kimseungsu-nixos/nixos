@@ -55,9 +55,6 @@ in
 
   programs.firefox.enable = true;
 
-  # ChatGPT Community (menu entry "ChatGPT Community", command codex-desktop). Unfree wrapper.
-  programs.codexDesktopLinux.enable = true;
-
   # Claude Desktop (official Linux beta, unfree).
   programs.claude-desktop.enable = true;
 

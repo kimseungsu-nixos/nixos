@@ -16,9 +16,8 @@
     # It brings its own nixpkgs pins for 19.09 libraries.
     hnc2020.url = "git+https://github.com/kimseungsu-zzz/nixos-HNC2020";
 
-    # ChatGPT Community (unofficial Linux build of the ChatGPT/Codex desktop app). It keeps its
-    # own nixpkgs pin on purpose: its derivation patches the official Electron payload.
-    codex-desktop-linux.url = "github:ilysenko/codex-desktop-linux";
+    # The NixOS 26.05 ChatGPT package is macOS-only.
+    nixpkgs-chatgpt.url = "tarball+https://channels.nixos.org/nixos-unstable/nixexprs.tar.zst";
 
     # Claude Desktop (official Linux beta from Anthropic's apt repo, packaged for Nix).
     claude-desktop.url = "github:poeck/claude-desktop-nix-flake";
@@ -65,7 +64,7 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, lan-mouse-niri, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, ... }:
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, lan-mouse-niri, nixpkgs-chatgpt, claude-desktop, omp, zen-browser, noctalia, home-manager, ... }:
   let
     rosPkgs = nix-ros-overlay.legacyPackages.x86_64-linux;
     ros = rosPkgs.rosPackages.lyrical;
@@ -176,7 +175,14 @@
         system = "x86_64-linux";
         modules = [
           ./configuration.nix
-          codex-desktop-linux.nixosModules.default
+          ({ lib, pkgs, ... }: {
+            environment.systemPackages = [
+              (import nixpkgs-chatgpt {
+                system = pkgs.stdenv.hostPlatform.system;
+                config.allowUnfreePredicate = pkg: lib.getName pkg == "chatgpt";
+              }).chatgpt
+            ];
+          })
           claude-desktop.nixosModules.default
           omp.nixosModules.default
           hnc2020.nixosModules.default
