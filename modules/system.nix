@@ -103,30 +103,6 @@
 
   services.openssh.enable = true;
 
-  nixpkgs.config.allowUnfree = true;
-
-  nix.settings = {
-    # Let Nix and build tools use the available logical CPUs.
-    max-jobs = "auto";
-    cores = 0;
-    extra-substituters = [ "https://noctalia.cachix.org" "https://ros.cachix.org" ];
-    extra-trusted-public-keys = [
-      "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
-      "ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo="
-    ];
-  };
-
-  # Automatic cleanup of old build results: every week, delete generations and
-  # store paths older than 7 days (the running generation is always kept),
-  # and hard-link identical files in the store.
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    persistent = true;
-    options = "--delete-older-than 7d";
-  };
-  nix.optimise.automatic = true;
-
   # Do not change after install; see `man configuration.nix`.
   system.stateVersion = "26.05";
 }

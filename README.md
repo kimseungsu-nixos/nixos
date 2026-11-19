@@ -9,7 +9,9 @@ Noctalia shell.
 | --- | --- |
 | `flake.nix` | inputs (nixpkgs 26.05, home-manager, noctalia, hnc2020, nix-packages, ...) and the host |
 | `configuration.nix` | imports the modules below |
-| `modules/system.nix` | boot, network, locale, user, ssh, automatic Nix cleanup |
+| `modules/system.nix` | boot, network, locale, user, SSH |
+| `modules/nix.nix` | build parallelism, caches, garbage collection, store optimisation |
+| `modules/resources.nix` | 8 GiB zram, 4 GiB Btrfs swap file, CPU frequency policy |
 | `modules/desktop.nix` | niri session, keyboard, Korean input (kime), audio, Bluetooth, printing |
 | `modules/apps.nix` | Hancom Office, Nautilus, podman/distrobox, CLI tools |
 | `modules/theme.nix` | Catppuccin Mocha: login screen, cursor, fonts |
@@ -18,13 +20,14 @@ Noctalia shell.
 
 ## Notes
 
-- The Nix daemon and rebuild script use the available logical CPU count for local build concurrency
+- The Nix daemon uses the available logical CPU count for local build concurrency
   and per-build parallelism.
 
 - `hnc2020` (Hancom Office) is a private repo fetched over HTTPS with the git
-  credentials from `gh auth login`. `./scripts/rebuild.sh build` builds without switching,
-  and `./scripts/rebuild.sh switch` applies the system. Both use the current lock file.
-  Use `./scripts/rebuild.sh switch --update` to refresh the flake inputs before rebuilding.
+  credentials from `gh auth login`. From this directory, `nixos-rebuild build --flake path:.#linux`
+  builds the system and `nixos-rebuild switch --sudo --flake path:.#linux` applies it.
+- Zram is used before `/var/lib/swapfile`. Reboot after switching to apply the kernel command line
+  that disables automatic activation of the previous swap partition. Check with `swapon --show`.
 - ROS 2 Lyrical Desktop is installed in the user environment from `nix-ros-overlay`.
   Run `ros2 run rosboard rosboard_node` and open `http://localhost:8888` to view ROS 2 topics.
   `colcon build` loads the pinned ROS development environment automatically. Use

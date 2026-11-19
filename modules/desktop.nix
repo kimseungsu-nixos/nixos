@@ -44,7 +44,6 @@
     };
   };
   services.upower.enable = true;
-  services.power-profiles-daemon.enable = true;
 
   # BlueZ does not dial out to paired devices by itself after boot (it waits for the device to
   # connect). Connect every paired device once Bluetooth is up; ones that are off just time out.

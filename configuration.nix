@@ -5,6 +5,8 @@
   imports = [
     ./hardware-configuration.nix
     ./modules/system.nix
+    ./modules/nix.nix
+    ./modules/resources.nix
     ./modules/hotspot.nix
     ./modules/desktop.nix
     ./modules/apps.nix

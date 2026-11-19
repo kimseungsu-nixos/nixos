@@ -188,7 +188,6 @@
           nix-packages.nixosModules.kakaotalk
           nix-packages.nixosModules.legacylauncher
           nix-packages.nixosModules.zapret-gui
-          { nix.settings.experimental-features = [ "nix-command" "flakes" ]; }
           home-manager.nixosModules.home-manager
           {
             home-manager = {
