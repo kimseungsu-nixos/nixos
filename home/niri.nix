@@ -1,7 +1,15 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   satellite = import ./xwayland-satellite.nix { inherit pkgs; };
+  displayProfileDir = "${config.xdg.stateHome}/niri/display-profiles";
+  displayProfiles = pkgs.writeShellApplication {
+    name = "niri-display-profile";
+    runtimeInputs = [ pkgs.python3 pkgs.niri pkgs.libnotify ];
+    text = ''
+      exec python3 ${../scripts/niri-display-profile.py} ${lib.escapeShellArg displayProfileDir} "$@"
+    '';
+  };
   niriConfig = pkgs.writeText "niri-config.kdl" ''
     input {
         keyboard {
@@ -43,11 +51,7 @@ let
         path "${satellite}/bin/xwayland-satellite"
     }
 
-    // The monitor lists 3440x1440@100 next to its default 50 Hz mode; at 50 Hz the pointer and
-    // every window trail by a visible fraction of a second.
-    output "HDMI-A-1" {
-        mode "3440x1440@100.000"
-    }
+    include optional=true ${builtins.toJSON "${displayProfileDir}/active.kdl"}
 
     spawn-at-startup "noctalia"
 
@@ -148,6 +152,7 @@ let
         Mod+S { spawn-sh "noctalia msg panel-toggle control-center"; }
         Mod+Comma { spawn-sh "noctalia msg settings-toggle"; }
         Mod+Shift+D { spawn-sh "noctalia msg panel-toggle raycursive/niri-displays:panel"; }
+        Mod+Ctrl+Shift+D { spawn "${lib.getExe displayProfiles}" "save"; }
         Print { spawn "screenshot-region"; }
         Mod+Shift+S { spawn "screenshot-region"; }
         Alt+Tab { spawn-sh "noctalia msg window-switcher hold"; }
@@ -212,7 +217,31 @@ let
 in
 {
   xdg.configFile."niri/config.kdl".source = niriConfig;
-  home.packages = [ (import ./kakaotalk-launcher.nix { inherit pkgs; }) ];
+  home.activation.createNiriDisplayProfileDirectory = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    run mkdir -p ${lib.escapeShellArg displayProfileDir}
+  '';
+  home.packages = [ displayProfiles (import ./kakaotalk-launcher.nix { inherit pkgs; }) ];
+  xdg.desktopEntries.niri-save-monitor-profile = {
+    name = "Save Monitor Layout / 모니터 배치 저장";
+    exec = "${lib.getExe displayProfiles} save";
+    icon = "video-display";
+    categories = [ "Settings" ];
+  };
+
+  systemd.user.services.niri-display-profiles = {
+    Unit = {
+      Description = "Restore the Niri layout for connected monitors";
+      After = [ "niri.service" ];
+      PartOf = [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStart = "${lib.getExe displayProfiles} watch";
+      ExecStopPost = "${lib.getExe displayProfiles} clear";
+      Restart = "on-failure";
+      RestartSec = 2;
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
 
   # Puts X11 (XEmbed) tray icons, e.g. KakaoTalk's under Wine, into Noctalia's tray.
   systemd.user.services.xembedsniproxy = {

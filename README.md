@@ -59,8 +59,10 @@ Noctalia shell.
   by several APs (2.4/5 GHz, mesh) is no longer merged into one and each adapter can join its own network. This builds Noctalia from source; drop the module to use the cache again.
 - Ghostty opens with `Mod+Enter` and from Nautilus's terminal context menu. It uses Nord
   and JetBrains Mono Nerd Font.
-- The monitor is set to 3440x1440@100 in `home/niri.nix`; its default 50 Hz mode makes the
-  pointer and windows trail visibly. `ntsync` is loaded for Wine's thread synchronisation.
+- Open display settings with `Mod+Shift+D`, then save the layout with `Mod+Ctrl+Shift+D`
+  or search for “Save Monitor Layout”. Profiles restore only for the same set of connected
+  monitors and ports. Other combinations use Niri's automatic layout until saved.
+- `ntsync` is loaded for Wine's thread synchronisation.
 
 Only WPILib VMX 2020 is installed; the 2026 and 2027 IDEs and desktop tool suites are removed.
 
