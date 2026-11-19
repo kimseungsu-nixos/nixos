@@ -30,6 +30,12 @@
   programs.zen-browser = {
     enable = true;
     setAsDefaultBrowser = true;
+    policies.Preferences = {
+      "zen.view.use-single-toolbar" = { Value = false; Status = "user"; };
+      "zen.view.compact.enable-at-startup" = { Value = true; Status = "user"; };
+      "zen.view.compact.hide-toolbar" = { Value = true; Status = "user"; };
+      "zen.view.compact.hide-tabbar" = { Value = false; Status = "user"; };
+    };
   };
 
   programs.noctalia = {
@@ -159,8 +165,9 @@
     theme = Nord
     font-family = JetBrainsMono Nerd Font
     font-size = 11
-    window-decoration = client
+    window-decoration = none
     window-theme = ghostty
+    gtk-tabs-location = bottom
     window-padding-x = 10
     window-padding-y = 8
     # Nautilus launches Ghostty in the selected folder via its process working directory.

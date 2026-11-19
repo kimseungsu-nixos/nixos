@@ -35,6 +35,49 @@ let
       chmod +x $out/bin/rpi-imager
     '';
   };
+
+  ventoy = pkgs.ventoy-full-gtk;
+  ventoyData = "${ventoy}/share/ventoy";
+  ventoyGtk3 = pkgs.writeShellApplication {
+    name = "ventoy-gtk3-wayland";
+    runtimeInputs = ventoy.buildInputs;
+    text = ''
+      if [[ $# != 1 || $1 != /* || ! -S $1 ]]; then
+        printf '%s\n' "Ventoy needs a Wayland display socket." >&2
+        exit 1
+      fi
+
+      export GDK_BACKEND=wayland
+      export WAYLAND_DISPLAY="$1"
+      cd ${ventoyData}
+      exec ./tool/${pkgs.stdenv.hostPlatform.parsed.cpu.name}/Ventoy2Disk.gtk3
+    '';
+  };
+  ventoyGui = pkgs.writeShellApplication {
+    name = "ventoy-gui";
+    text = ''
+      # The stock launcher forces X11 in Wayland sessions and forwards the full
+      # environment to pkexec. Give the native GTK frontend only the display socket.
+      display="''${WAYLAND_DISPLAY:-}"
+      if [[ -z "$display" ]]; then
+        exec ${ventoy}/bin/ventoy-gui "$@"
+      fi
+      if [[ "$display" != /* ]]; then
+        display="''${XDG_RUNTIME_DIR:?Ventoy needs XDG_RUNTIME_DIR}/$display"
+      fi
+      if [[ $EUID == 0 ]]; then
+        exec ${lib.getExe ventoyGtk3} "$display"
+      fi
+      exec /run/wrappers/bin/pkexec ${lib.getExe ventoyGtk3} "$display"
+    '';
+  };
+  ventoyWithWayland = pkgs.symlinkJoin {
+    name = "ventoy-with-wayland";
+    paths = [ ventoy ];
+    postBuild = ''
+      ln -sfn ${lib.getExe ventoyGui} "$out/bin/ventoy-gui"
+    '';
+  };
 in
 {
   # VS Code >= 1.122 moved ripgrep into a platform-specific directory.
@@ -131,7 +174,7 @@ in
     python3
     dsview
     rpiImager   # Raspberry Pi Imager, always as root
-    ventoy-full-gtk  # bootable USB creator (run with sudo or via polkit)
+    ventoyWithWayland
     nautilus
     file-roller
     loupe
