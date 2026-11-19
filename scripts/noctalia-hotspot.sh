@@ -257,6 +257,7 @@ if [[ $uplink != auto ]]; then
 fi
 
 active_devices=()
+active_bands=()
 configs=()
 status=
 for index in "${!plan[@]}"; do
@@ -289,6 +290,7 @@ rsn_pairwise=CCMP
 wpa_passphrase=$password
 CONF
   active_devices+=("$device")
+  active_bands+=("$band")
   configs+=("$config")
   status+="${status:+  ·  }$band GHz / $channel"
 done
@@ -310,7 +312,8 @@ if [[ $uplink != auto ]]; then
   dns_args+=(--port=0 "--dhcp-option=option:dns-server$(selected_dns)")
 fi
 subnet=${gateway%.*}
-dnsmasq --keep-in-foreground --conf-file=/dev/null --bind-interfaces --except-interface=lo --leasefile-ro \
+dnsmasq --keep-in-foreground --conf-file=/dev/null --bind-interfaces --except-interface=lo \
+  --dhcp-leasefile="$RUNTIME_DIRECTORY/dhcp.leases" \
   --interface="$bridge" --listen-address="$gateway" --dhcp-range="$subnet.10,$subnet.200,12h" "${dns_args[@]}" &
 dhcp_pid=$!
 sleep 0.2
@@ -322,6 +325,7 @@ status+="  ·  $gateway"
 if [[ $uplink != auto ]]; then
   status+="  ·  $uplink"
 fi
+refresh_clients
 printf '%s\n' "$ssid" "$status" > "$RUNTIME_DIRECTORY/status"
 printf '%s\n' "$password" > "$RUNTIME_DIRECTORY/password"
 chmod 0640 "$RUNTIME_DIRECTORY/status" "$RUNTIME_DIRECTORY/password"
@@ -334,7 +338,11 @@ while kill -0 "$ap_pid" 2>/dev/null && kill -0 "$dhcp_pid" 2>/dev/null; do
   if [[ $uplink != auto ]]; then
     refresh_uplink_routes
   fi
-  if (( ++ticks % 3 == 0 )); then
+  (( ++ticks ))
+  if (( ticks % 2 == 0 )); then
+    refresh_clients
+  fi
+  if (( ticks % 3 == 0 )); then
     refresh_mdns
   fi
   sleep 1

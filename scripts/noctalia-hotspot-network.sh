@@ -4,6 +4,42 @@ guard_priority=101
 guard_table=noctalia_hotspot_uplink
 runtime_path=/run/noctalia-hotspot
 
+refresh_clients() {
+  local snapshot stations index device leases="$RUNTIME_DIRECTORY/dhcp.leases"
+  [[ -r $leases ]] || leases=/dev/null
+  snapshot=$(mktemp "$RUNTIME_DIRECTORY/.clients.XXXXXX")
+  for index in "${!active_devices[@]}"; do
+    device=${active_devices[$index]}
+    # all_sta can return 1 at the end of a successful station walk.
+    if stations=$(timeout 1s hostapd_cli -p "$RUNTIME_DIRECTORY/hostapd" -i "$device" all_sta 2>/dev/null) ||
+       [[ $? == 1 ]]; then
+      printf '%s\n' "$stations" | awk -v band="${active_bands[$index]} GHz" '
+        ARGIND == 1 && NF >= 4 && ($1 == 0 || $1 > systime()) {
+          ip[tolower($2)] = $3
+          if ($4 ~ /^[[:alnum:]_.-]+$/) name[tolower($2)] = $4
+          next
+        }
+        ARGIND == 2 && /^[[:xdigit:]]{2}(:[[:xdigit:]]{2}){5}$/ { mac = tolower($0) }
+        ARGIND == 2 && /^flags=/ && mac != "" {
+          if (index($0, "[AUTHORIZED]")) printf "%s\t%s\t%s\t%s\n", mac, band, ip[mac], name[mac]
+          mac = ""
+        }
+      ' "$leases" - >> "$snapshot"
+    else
+      # Keep the last complete snapshot if one of the radios failed to respond.
+      rm -f -- "$snapshot"
+      return 0
+    fi
+  done
+  sort -t $'\t' -k1,1 -u -o "$snapshot" "$snapshot"
+  if cmp -s "$snapshot" "$RUNTIME_DIRECTORY/clients"; then
+    rm -f -- "$snapshot"
+  else
+    chmod 0640 "$snapshot"
+    mv -f -- "$snapshot" "$RUNTIME_DIRECTORY/clients"
+  fi
+}
+
 valid_uplink() {
   [[ $1 =~ ^[a-zA-Z0-9_.-]{1,15}$ && $1 != auto && $1 != lo && $1 != "$bridge" &&
      $1 != "${ap_devices[0]}" && $1 != "${ap_devices[1]}" ]]

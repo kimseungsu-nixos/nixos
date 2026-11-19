@@ -28,6 +28,8 @@ Noctalia shell.
   builds the system and `nixos-rebuild switch --sudo --flake path:.#linux` applies it.
 - Zram is used before `/var/lib/swapfile`. Reboot after switching to apply the kernel command line
   that disables automatic activation of the previous swap partition. Check with `swapon --show`.
+- The hotspot card in Noctalia's Network tab lists currently connected devices on both Wi-Fi bands.
+  Each row shows the MAC address and band, plus the hostname and IPv4 address when DHCP provides them.
 - ROS 2 Lyrical Desktop is installed in the user environment from `nix-ros-overlay`.
   Run `ros2 run rosboard rosboard_node` and open `http://localhost:8888` to view ROS 2 topics.
   `colcon build` loads the pinned ROS development environment automatically. Use
