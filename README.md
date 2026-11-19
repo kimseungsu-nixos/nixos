@@ -14,7 +14,7 @@ Noctalia shell.
 | `modules/resources.nix` | 8 GiB zram, 4 GiB Btrfs swap file, CPU frequency policy |
 | `modules/desktop.nix` | niri session, keyboard, Korean input (kime), audio, Bluetooth, printing |
 | `modules/apps.nix` | Hancom Office, Nautilus, podman/distrobox, CLI tools |
-| `modules/theme.nix` | Catppuccin Mocha: login screen, cursor, fonts |
+| `modules/theme.nix` | login wallpaper, blue cursor, fonts |
 | `home.nix`, `home/` | home-manager: niri config (`niri.nix`), GTK theme and Ghostty (`home.nix`), GUI apps (`packages.nix`), tray bridge (`xembedsniproxy/`), clipboard helper (`copy-image/`) |
 | `hardware-configuration.nix` | generated for this machine |
 
@@ -57,7 +57,7 @@ Noctalia shell.
 - Noctalia's Wi-Fi list is patched (`patches/noctalia-ap-list.patch`, wired in `home/noctalia-ap-list.nix`): every
   access point is a row with its band and channel, in one section per Wi-Fi adapter, so a network served
   by several APs (2.4/5 GHz, mesh) is no longer merged into one and each adapter can join its own network. This builds Noctalia from source; drop the module to use the cache again.
-- Ghostty opens with `Mod+Enter` and from Nautilus's terminal context menu. It uses Catppuccin Mocha
+- Ghostty opens with `Mod+Enter` and from Nautilus's terminal context menu. It uses Nord
   and JetBrains Mono Nerd Font.
 - The monitor is set to 3440x1440@100 in `home/niri.nix`; its default 50 Hz mode makes the
   pointer and windows trail visibly. `ntsync` is loaded for Wine's thread synchronisation.

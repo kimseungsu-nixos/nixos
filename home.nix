@@ -1,4 +1,4 @@
-{ lib, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 {
   imports = [
@@ -37,31 +37,31 @@
     settings = {
       shell = {
         font_family = "Pretendard";
-        corner_radius_scale = 1.15;
+        corner_radius_scale = 1.0;
         polkit_agent = true;
         panel = {
-          transparency_mode = "glass";
-          borders = false;
+          transparency_mode = "soft";
+          borders = true;
           shadow = true;
         };
       };
       bar.main = {
         position = "top";
-        thickness = 40;
-        background_opacity = 0.92;
+        thickness = 34;
+        background_opacity = 0.94;
         compositor_blur = true;
-        radius = 14;
-        margin_ends = 220;
-        margin_edge = 10;
-        padding = 14;
+        radius = 11;
+        margin_ends = 18;
+        margin_edge = 8;
+        padding = 12;
         widget_spacing = 8;
         start = [ "launcher" "workspaces" ];
         center = [ "clock" ];
-        end = [ "media" "tray" "network" "bluetooth" "volume" "battery" "notifications" "displays" "control-center" "session" ];
+        end = [ "media" "tray" "network" "battery" "notifications" "displays" "control-center" "session" ];
       };
       widget.displays = {
         type = "raycursive/niri-displays:bar";
-        show_resolution = true;
+        show_resolution = false;
       };
       plugins.enabled = [ "raycursive/niri-displays" ];
       plugin_settings."raycursive/niri-displays" = {
@@ -71,11 +71,37 @@
       theme = {
         mode = "dark";
         source = "builtin";
-        builtin = "Catppuccin";
+        builtin = "Nord";
       };
-      wallpaper.enabled = false;
+      wallpaper = {
+        enabled = true;
+        fill_mode = "crop";
+        fill_color = "#2e3440";
+        transition = [ "fade" ];
+        default.path = "${./files/blue-hour.jpg}";
+      };
     };
   };
+
+  # Noctalia's state can override the declared wallpaper. Drop only its old bundled
+  # selection so the new default is visible on this installation.
+  home.activation.unsetBundledNoctaliaWallpaper = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    settings=${lib.escapeShellArg "${config.xdg.stateHome}/noctalia/settings.toml"}
+    if [[ -f "$settings" && ! -v DRY_RUN ]]; then
+      updated=$(mktemp "$settings.XXXXXX")
+      ${lib.getExe pkgs.gawk} '
+        /^\[/ { wallpaper = /^\[wallpaper\.(default|last)\]$/ }
+        wallpaper && /^path = "\/nix\/store\/[^/]+-noctalia-[^/]+\/share\/noctalia\/assets\/noctalia-wallpaper\.png"$/ { next }
+        { print }
+      ' "$settings" > "$updated"
+      if ! cmp -s "$settings" "$updated"; then
+        chmod --reference="$settings" "$updated"
+        mv -f "$updated" "$settings"
+      else
+        rm -f "$updated"
+      fi
+    fi
+  '';
 
   # Open folders in Nautilus. mimeapps.list stays writable (apps register URL handlers in it),
   # so the default is set in place instead of through xdg.mimeApps.
@@ -101,8 +127,7 @@
       application/vnd.efi.img application/x-raw-disk-image
   '';
 
-  # GTK look for GTK apps: dark adw-gtk3 with Papirus icons using
-  # Catppuccin Mocha mauve folders (matching modules/theme.nix).
+  # Dark Adwaita with blue Papirus folders and a matching cursor.
   gtk = {
     enable = true;
     theme = {
@@ -113,11 +138,11 @@
       name = "Papirus-Dark";
       package = pkgs.catppuccin-papirus-folders.override {
         flavor = "mocha";
-        accent = "mauve";
+        accent = "blue";
       };
     };
     cursorTheme = {
-      name = "catppuccin-mocha-mauve-cursors";
+      name = "catppuccin-mocha-blue-cursors";
       size = 24;
     };
     font = {
@@ -131,10 +156,11 @@
   dconf.settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
 
   xdg.configFile."ghostty/config".text = ''
-    theme = Catppuccin Mocha
+    theme = Nord
     font-family = JetBrainsMono Nerd Font
     font-size = 11
     window-decoration = client
+    window-theme = ghostty
     window-padding-x = 10
     window-padding-y = 8
     # Nautilus launches Ghostty in the selected folder via its process working directory.

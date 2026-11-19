@@ -25,7 +25,7 @@ let
     }
 
     cursor {
-        xcursor-theme "catppuccin-mocha-mauve-cursors"
+        xcursor-theme "catppuccin-mocha-blue-cursors"
         xcursor-size 24
     }
 
@@ -53,7 +53,7 @@ let
 
     // Round and clip every window to its geometry.
     window-rule {
-        geometry-corner-radius 16
+        geometry-corner-radius 12
         clip-to-geometry true
     }
 
@@ -113,20 +113,20 @@ let
     }
 
     layout {
-        gaps 8
-        background-color "#1e1e2e"
+        gaps 10
+        background-color "#2e3440"
         center-focused-column "never"
         default-column-width { proportion 0.5; }
         border {
-            width 2
-            active-color "#cba6f7"
-            inactive-color "#45475a"
+            width 1
+            active-color "#88c0d0"
+            inactive-color "#434c5e"
         }
         focus-ring { off; }
     }
 
     overview {
-        backdrop-color "#181825"
+        backdrop-color "#242933"
     }
 
     layer-rule {

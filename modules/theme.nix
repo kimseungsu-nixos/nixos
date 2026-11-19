@@ -1,20 +1,18 @@
-# Catppuccin look for SDDM and the shared cursor theme.
-#   flavor: latte | frappe | macchiato | mocha     accent: mauve | blue | pink | ...
+# Blue accents for SDDM and the shared cursor theme.
 { pkgs, ... }:
 
 let
   flavor = "mocha";
-  accent = "mauve";
+  accent = "blue";
 in
 {
   environment.systemPackages = [
-    # Cursor theme "catppuccin-mocha-mauve-cursors".
-    pkgs.catppuccin-cursors.mochaMauve
-    # Login screen theme "catppuccin-mocha-mauve".
+    pkgs.catppuccin-cursors.mochaBlue
     (pkgs.catppuccin-sddm.override {
       inherit flavor accent;
       font = "Pretendard";
       fontSize = "10";
+      background = "${../files/blue-hour.jpg}";
     })
   ];
 
