@@ -47,6 +47,10 @@
   networking.networkmanager.enable = true;
   # Lan Mouse shares keyboard and pointer input with the paired Windows machine.
   networking.firewall.allowedUDPPorts = [ 4242 ];
+  # ROS 2 DDS discovery and data traffic.
+  networking.firewall.allowedUDPPortRanges = [
+    { from = 7400; to = 7650; }
+  ];
   # Keep Wi-Fi at full power on every NetworkManager connection.
   networking.networkmanager.wifi.powersave = false;
   # NetworkManager ranks Ethernet (metric 100) above Wi-Fi (600). Both get the same metric here, so
@@ -81,6 +85,8 @@
     # libinput은 evdev 장치를 O_RDWR로 열기 때문에 그룹 쓰기 권한이 필수다.
     extraGroups = [ "networkmanager" "wheel" "input" ];
   };
+
+  security.sudo.extraConfig = "Defaults:linux pwfeedback";
 
   # --- SC-IPK DriverStation ---
   # DS(Avalonia)는 네이티브 백엔드에서 libinput으로 키보드를 직접 연다.
