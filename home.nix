@@ -148,8 +148,9 @@
       };
     };
     cursorTheme = {
-      name = "catppuccin-mocha-blue-cursors";
-      size = 24;
+      package = pkgs.bibata-cursors;
+      name = "Bibata-Modern-Amber";
+      size = 28;
     };
     font = {
       name = "Pretendard";

@@ -33,8 +33,8 @@ let
     }
 
     cursor {
-        xcursor-theme "catppuccin-mocha-blue-cursors"
-        xcursor-size 24
+        xcursor-theme ${builtins.toJSON config.gtk.cursorTheme.name}
+        xcursor-size ${toString config.gtk.cursorTheme.size}
     }
 
     // Ask apps to drop their own title bars. Without this, Chromium/Electron apps on

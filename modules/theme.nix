@@ -1,4 +1,4 @@
-# Blue accents for SDDM and the shared cursor theme.
+# Blue accents for SDDM, cursor package, and shared fonts.
 { pkgs, ... }:
 
 let
@@ -7,7 +7,7 @@ let
 in
 {
   environment.systemPackages = [
-    pkgs.catppuccin-cursors.mochaBlue
+    pkgs.bibata-cursors
     (pkgs.catppuccin-sddm.override {
       inherit flavor accent;
       font = "Pretendard";
