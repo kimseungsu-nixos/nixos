@@ -149,7 +149,7 @@
     };
     cursorTheme = {
       package = pkgs.bibata-cursors;
-      name = "Bibata-Modern-Amber";
+      name = "Bibata-Modern-Ice";
       size = 28;
     };
     font = {
