@@ -36,8 +36,8 @@
     # Complete desktop shell for the Niri session (bar, launcher, notifications, controls).
     noctalia.url = "github:noctalia-dev/noctalia/cachix";
 
-    # Private monorepo: Studica Hardware Manager, Titan Config, KakaoTalk (packages + NixOS
-    # modules). Fetched over HTTPS with the gh credentials, like the other private inputs.
+    # Private monorepo: Titan Config, KakaoTalk, and other packages and NixOS
+    # modules. Fetched over HTTPS with the gh credentials, like the other private inputs.
     nix-packages = {
       url = "git+https://github.com/kimseungsu-zzz/nix-packages";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -48,9 +48,6 @@
       url = "git+https://github.com/wsuser1101/VMX-WPILib-2020-Archive.git?dir=nix-frc2020-vmx";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # ROS 2 Elastic Dashboard uses the Flutter toolchain pinned by its own flake.
-    ros2-elastic-dashboard.url = "git+https://github.com/kimseungsu-zzz/ros2_elastic_dashboard.git";
 
     # ROS packages use the nixpkgs revision tested by the ROS overlay.
     nix-ros-overlay.url = "github:lopsided98/nix-ros-overlay/master";
@@ -68,7 +65,7 @@
     };
   };
 
-  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, ros2-elastic-dashboard, lan-mouse-niri, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, ... }:
+  outputs = { nixpkgs, hnc2020, nix-packages, nix-frc2020-vmx, nix-ros-overlay, lan-mouse-niri, codex-desktop-linux, claude-desktop, omp, zen-browser, noctalia, home-manager, ... }:
   let
     rosPkgs = nix-ros-overlay.legacyPackages.x86_64-linux;
     ros = rosPkgs.rosPackages.lyrical;
@@ -183,7 +180,6 @@
           claude-desktop.nixosModules.default
           omp.nixosModules.default
           hnc2020.nixosModules.default
-          nix-packages.nixosModules.studica-hardware-manager
           nix-packages.nixosModules.titan-config
           nix-packages.nixosModules.kakaotalk
           nix-packages.nixosModules.legacylauncher
@@ -193,7 +189,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx rosEnv ros2-elastic-dashboard lan-mouse-niri colconRos2; };
+              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx rosEnv lan-mouse-niri colconRos2; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";

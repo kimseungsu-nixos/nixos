@@ -67,12 +67,6 @@ in
   # OBS Studio (screen recording / streaming), with the virtual camera module.
   programs.obs-studio.enable = true;
 
-  # Studica Hardware Manager. users get added to the dialout group (re-login needed).
-  programs.studica-hardware-manager = {
-    enable = true;
-    users = [ "linux" ];
-  };
-
   # Studica Titan Config & Update App (udev rules for 0483:5740 / df11, dfu-util).
   programs.titan-config.enable = true;
 
@@ -89,13 +83,11 @@ in
     extraPackages = [ pkgs.intel-media-driver ];
   };
 
-  # Terminal: foot (colours in home.nix, Mod+Return in home/niri.nix).
-  # Apps with Terminal=true open in foot instead of falling back to xterm: Noctalia's
-  # launcher reads $TERMINAL, GLib/GIO apps use xdg-terminal-exec.
-  environment.sessionVariables.TERMINAL = "foot";
+  # Noctalia reads $TERMINAL; GLib/GIO apps use xdg-terminal-exec.
+  environment.sessionVariables.TERMINAL = "ghostty";
   xdg.terminal-exec = {
     enable = true;
-    settings.default = [ "foot.desktop" ];
+    settings.default = [ "com.mitchellh.ghostty.desktop" ];
   };
   # services.xserver.enable pulls in xterm by default.
   services.xserver.excludePackages = [ pkgs.xterm ];
@@ -104,26 +96,24 @@ in
   # Nautilus uses UDisks/GVFS from modules/desktop.nix for removable media.
   programs.nautilus-open-any-terminal = {
     enable = true;
-    terminal = "foot";
+    terminal = "ghostty";
   };
 
-  # Roblox through Sober, the Linux client (Flatpak only, not in nixpkgs). A boot-time job adds
-  # Flathub and installs or updates Sober; it needs the network and does nothing when offline.
-  # Start it from the menu ("Sober") or with `flatpak run org.vinegarhq.Sober`.
   services.flatpak.enable = true;
-  systemd.services.flatpak-sober = {
-    description = "Install Sober (Roblox) from Flathub";
+  # Remove Sober from machines that ran the previous system installation job.
+  systemd.services.remove-sober = {
+    description = "Uninstall the legacy system Flatpak installation of Sober";
     wantedBy = [ "multi-user.target" ];
-    wants = [ "network-online.target" ];
-    after = [ "network-online.target" ];
-    path = [ pkgs.flatpak ];
+    unitConfig.ConditionPathExists = "!/var/lib/remove-sober/done";
     serviceConfig = {
       Type = "oneshot";
-      RemainAfterExit = true;
+      StateDirectory = "remove-sober";
     };
     script = ''
-      flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-      flatpak install --system --noninteractive --or-update flathub org.vinegarhq.Sober
+      if [ -e /var/lib/flatpak/app/org.vinegarhq.Sober/current/active ]; then
+        ${lib.getExe pkgs.flatpak} uninstall --system --noninteractive --assumeyes app/org.vinegarhq.Sober
+      fi
+      touch "$STATE_DIRECTORY/done"
     '';
   };
 
@@ -138,6 +128,7 @@ in
     git
     gh
     btop
+    ghostty
     distrobox
     nodejs
     python3

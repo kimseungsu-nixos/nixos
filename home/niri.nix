@@ -143,7 +143,7 @@ let
     }
 
     binds {
-        Mod+Return { spawn "foot"; }
+        Mod+Return { spawn "ghostty"; }
         Mod+Space { spawn-sh "noctalia msg panel-toggle launcher"; }
         Mod+S { spawn-sh "noctalia msg panel-toggle control-center"; }
         Mod+Comma { spawn-sh "noctalia msg settings-toggle"; }

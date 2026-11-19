@@ -15,7 +15,7 @@ Noctalia shell.
 | `modules/desktop.nix` | niri session, keyboard, Korean input (kime), audio, Bluetooth, printing |
 | `modules/apps.nix` | Hancom Office, Nautilus, podman/distrobox, CLI tools |
 | `modules/theme.nix` | Catppuccin Mocha: login screen, cursor, fonts |
-| `home.nix`, `home/` | home-manager: niri config (`niri.nix`), GTK theme and foot (`home.nix`), GUI apps (`packages.nix`), tray bridge (`xembedsniproxy/`), clipboard helper (`copy-image/`) |
+| `home.nix`, `home/` | home-manager: niri config (`niri.nix`), GTK theme and Ghostty (`home.nix`), GUI apps (`packages.nix`), tray bridge (`xembedsniproxy/`), clipboard helper (`copy-image/`) |
 | `hardware-configuration.nix` | generated for this machine |
 
 ## Notes
@@ -57,9 +57,8 @@ Noctalia shell.
 - Noctalia's Wi-Fi list is patched (`patches/noctalia-ap-list.patch`, wired in `home/noctalia-ap-list.nix`): every
   access point is a row with its band and channel, in one section per Wi-Fi adapter, so a network served
   by several APs (2.4/5 GHz, mesh) is no longer merged into one and each adapter can join its own network. This builds Noctalia from source; drop the module to use the cache again.
-- Roblox runs through Sober, the Linux client from Flathub: `services.flatpak` plus a boot-time job
-  (`flatpak-sober`, `modules/apps.nix`) that installs and updates it. Start it from the menu ("Sober")
-  or `flatpak run org.vinegarhq.Sober`. The first start downloads Roblox itself.
+- Ghostty opens with `Mod+Enter` and from Nautilus's terminal context menu. It uses Catppuccin Mocha
+  and JetBrains Mono Nerd Font.
 - The monitor is set to 3440x1440@100 in `home/niri.nix`; its default 50 Hz mode makes the
   pointer and windows trail visibly. `ntsync` is loaded for Wine's thread synchronisation.
 
