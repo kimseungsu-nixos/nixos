@@ -103,7 +103,23 @@
       rclcpp-lifecycle
       gpio-controllers
     ];
-    rosEnv = ros.buildEnv { paths = rosPaths ++ [ rosboard ]; };
+    rosEnv = (ros.buildEnv { paths = rosPaths ++ [ rosboard ]; }).overrideAttrs ({ postFixup ? "", ... }: {
+      postFixup = postFixup + ''
+        # RViz uses OGRE's GLX renderer, which needs an X11 window from Qt.
+        wrapProgram "$out/bin/rviz2" --set QT_QPA_PLATFORM xcb
+
+        # ROS launch and ros2 run use the package executable in lib/rviz2.
+        rvizLibDir="$out/lib/rviz2"
+        if [ -L "$rvizLibDir" ]; then
+          rvizLibSource="$(readlink -f "$rvizLibDir")"
+          rm "$rvizLibDir"
+          mkdir "$rvizLibDir"
+          # Keep the new directory writable so wrapProgram can replace its entry.
+          cp -rs "$rvizLibSource/." "$rvizLibDir/"
+        fi
+        wrapProgram "$rvizLibDir/rviz2" --set QT_QPA_PLATFORM xcb
+      '';
+    });
     rosUnderlay = ros.buildEnv {
       underlay = true;
       paths = [ rosPkgs.colcon ros.ament-cmake-core ros.python-cmake-module ] ++ rosPaths;
