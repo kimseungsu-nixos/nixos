@@ -94,6 +94,7 @@
     };
     rosPaths = with ros; [
       desktop
+      rmw-cyclonedds-cpp
       ros2-control
       ros2-controllers
       hardware-interface
