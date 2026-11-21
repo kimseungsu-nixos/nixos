@@ -110,8 +110,8 @@ in
   # Studica Titan Config & Update App (udev rules for 0483:5740 / df11, dfu-util).
   programs.titan-config.enable = true;
 
-  # Register the DreamSourceLab USB rules bundled with DSView.
-  services.udev.packages = [ pkgs.dsview ];
+  # Register USB rules for DSView and Samsung Download Mode.
+  services.udev.packages = [ pkgs.dsview pkgs.heimdall.udev ];
 
   # podman/distrobox for containers (WPILib VMX 2020 itself runs natively, see home/wpilib-vmx.nix).
   # hardware.graphics exposes Mesa at /run/opengl-driver, which distrobox bind-mounts into a container.
@@ -173,6 +173,9 @@ in
     nodejs
     python3
     dsview
+    pmbootstrap
+    android-tools # adb and fastboot
+    heimdall
     rpiImager   # Raspberry Pi Imager, always as root
     ventoyWithWayland
     nautilus
