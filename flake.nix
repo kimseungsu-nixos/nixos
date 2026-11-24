@@ -17,7 +17,9 @@
     claude-desktop.url = "github:poeck/claude-desktop-nix-flake";
 
     # Oh My Pi coding agent; keep upstream's toolchain pins for its native build.
-    omp.url = "github:can1357/oh-my-pi";
+    # Pinned: 37de435f fails to build ("Multiple files share the same output path"
+    # in compile-binary.ts, tui widgets/painters input.ts both emit input-*.js).
+    omp.url = "github:can1357/oh-my-pi/57771ae562b9345e0579bceb2d68d585e3e6927e";
 
     # Zen Browser, packaged for Nix with a Home Manager module.
     zen-browser = {
