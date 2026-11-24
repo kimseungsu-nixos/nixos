@@ -1,12 +1,6 @@
 {
   description = "linux NixOS system";
 
-  # Official Noctalia cache; avoids compiling its Qt shell locally.
-  nixConfig = {
-    extra-substituters = [ "https://noctalia.cachix.org" ];
-    extra-trusted-public-keys = [ "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4=" ];
-  };
-
   inputs = {
     # Matches system.stateVersion in configuration.nix.
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
