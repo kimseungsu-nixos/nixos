@@ -1,5 +1,0 @@
-# note4-imu (pid.codes 1209:0001): give the logged-in user access without sudo.
-# Must sort before 73-seat-late.rules, which turns TAG+="uaccess" into ACLs.
-# libiio/libusb (iiod interface) and the ACM debug shell.
-SUBSYSTEM=="usb", ATTR{idVendor}=="1209", ATTR{idProduct}=="0001", MODE="0660", TAG+="uaccess"
-SUBSYSTEM=="tty", ATTRS{idVendor}=="1209", ATTRS{idProduct}=="0001", MODE="0660", TAG+="uaccess", SYMLINK+="note4-imu"

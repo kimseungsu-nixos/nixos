@@ -88,19 +88,6 @@
 
   security.sudo.extraConfig = "Defaults:linux pwfeedback";
 
-  # linux 사용자에게 비밀번호 없는 root 권한을 준다.
-  security.sudo.extraRules = [
-    {
-      users = [ "linux" ];
-      commands = [
-        {
-          command = "ALL";
-          options = [ "NOPASSWD" "SETENV" ];
-        }
-      ];
-    }
-  ];
-
   # --- SC-IPK DriverStation ---
   # DS(Avalonia)는 네이티브 백엔드에서 libinput으로 키보드를 직접 연다.
   # libinput은 O_RDWR로 열어야 하므로 /dev/input/event* 가 0660(input) 이어야 한다.
@@ -115,11 +102,6 @@
       name = "sc-ds-udev-rules";
       destination = "/etc/udev/rules.d/99-sc-ds.rules";
       text = builtins.readFile ../files/99-sc-ds.rules;
-    })
-    (pkgs.writeTextFile {
-      name = "note4-imu-udev-rules";
-      destination = "/etc/udev/rules.d/70-note4-imu.rules";
-      text = builtins.readFile ../files/70-note4-imu.rules;
     })
   ];
   # uinput(가상 입력 장치) 모듈. ds-controller 가 가상 키보드/포인터를 만든다.
