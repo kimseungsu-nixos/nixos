@@ -109,6 +109,31 @@
 
   services.openssh.enable = true;
 
+  # git credential helper for the root user (nix fetches private inputs as root).
+  # gh's own config is the credential store; the helper only resolves the token
+  # from it. Never hardcode a nix store path here: garbage collection replaces
+  # the path and the helper silently stops working.
+  environment.etc."gitconfig-root" = {
+    mode = "0644";
+    text = ''
+      [credential "https://github.com"]
+      	helper =
+      	helper = !gh auth git-credential
+      [credential "https://gist.github.com"]
+      	helper =
+      	helper = !gh auth git-credential
+    '';
+  };
+
+  system.activationScripts.rootgitconfig = {
+    deps = [ "users" "etc" ];
+    text = ''
+      # /root is only writable by root, and git looks for $HOME/.gitconfig there.
+      # environment.etc alone would leave root without the credential helper.
+      ln -sfn /etc/gitconfig-root /root/.gitconfig
+    '';
+  };
+
   # Do not change after install; see `man configuration.nix`.
   system.stateVersion = "26.05";
 }

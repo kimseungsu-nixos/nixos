@@ -190,7 +190,10 @@
             environment.systemPackages = [
               (import nixpkgs-chatgpt {
                 system = pkgs.stdenv.hostPlatform.system;
-                config.allowUnfreePredicate = pkg: lib.getName pkg == "chatgpt";
+                # The nixpkgs-chatgpt tarball pins an older nixpkgs, so an unfree
+                # predicate here does not cover the metric name its new revision
+                # assigns. Allow the package set it evaluates, not the name.
+                config.allowUnfree = true;
               }).chatgpt
             ];
           })
