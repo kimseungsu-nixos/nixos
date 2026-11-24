@@ -175,6 +175,7 @@ in
     dsview
     pmbootstrap
     android-tools # adb and fastboot
+    sshpass
     heimdall
     rpiImager   # Raspberry Pi Imager, always as root
     ventoyWithWayland
