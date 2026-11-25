@@ -83,7 +83,7 @@
     description = "Linux";
     # "input" 그룹이 있어야 DS가 키보드/조이스틱을 읽는다.
     # libinput은 evdev 장치를 O_RDWR로 열기 때문에 그룹 쓰기 권한이 필수다.
-    # "kvm": QEMU needs /dev/kvm for usable emulation speed (modules/buildroot.nix).
+    # "kvm": hardware acceleration for QEMU guests matching the host architecture.
     extraGroups = [ "networkmanager" "wheel" "input" "kvm" ];
   };
 

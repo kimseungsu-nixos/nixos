@@ -14,7 +14,7 @@ Noctalia shell.
 | `modules/resources.nix` | 8 GiB zram, 4 GiB Btrfs swap file, CPU frequency policy |
 | `modules/desktop.nix` | niri session, keyboard, Korean input (kime), audio, Bluetooth, printing |
 | `modules/apps.nix` | Hancom Office, Nautilus, podman/distrobox, CLI tools |
-| `modules/buildroot.nix` | Buildroot toolchain, QEMU board runners, cross-binary execution |
+| `modules/buildroot.nix`, `packages/buildroot.nix` | Buildroot FHS environment, QEMU runners, cross-binary execution |
 | `modules/theme.nix` | login wallpaper, Bibata cursor package, fonts |
 | `home.nix`, `home/` | home-manager: niri config (`niri.nix`), GTK theme and Ghostty (`home.nix`), GUI apps (`packages.nix`), tray bridge (`xembedsniproxy/`), clipboard helper (`copy-image/`) |
 | `hardware-configuration.nix` | generated for this machine |
@@ -38,15 +38,6 @@ Noctalia shell.
   To use the matching `colcon` from an existing workspace without switching the system, run
   `nix shell ~/github/kimseungsu-nixos/nixos#ros2 --command colcon build --cmake-clean-cache`.
   For direct `cmake` commands, use `nix develop ~/github/kimseungsu-nixos/nixos#ros2`.
-- Buildroot (`modules/buildroot.nix`): `buildroot` runs `make <defconfig>` / `menuconfig` /
-  `make` in `~/buildroot-workspace/buildroot-2026.05.3`, unpacked once from the store tarball
-  (Buildroot writes into its own tree and refuses to run as root); downloads are cached in
-  `~/.buildroot-dl`. Boot a board with `run-qemu-riscv64-virt` or `run-qemu-aarch64-virt`,
-  which use Buildroot's own documented QEMU command lines and read `output/images/` unless a
-  directory is passed. Target binaries of a built rootfs run directly here: `boot.binfmt` has
-  `aarch64-linux` and `riscv64-linux` registered. `run-target` executes an aarch64 binary and
-  `run-target-riscv64` a riscv64 one via QEMU user mode, for the cases binfmt cannot handle
-  (setuid, chroot).
 - Old builds are cleaned up automatically: a weekly `nix.gc` deletes
   generations older than 7 days and `/boot` keeps the last 5.
 - Screenshots (`Print`, `Mod+Shift+S`) go to `~/Pictures/Screenshots` and onto the clipboard as
@@ -81,6 +72,45 @@ the `wpilib2020-vmx` package of the `nix-frc2020-vmx` input from the `nix-frc202
 (`wpilibcode2020_vmx`, `wpilib-elastic`, `wpilib-shell`; menu entries "WPILib VS Code 2020_vmx" and
 "WPILib Elastic NT3 2020_vmx"). The old Ubuntu distrobox container (`scripts/nixos-distrobox.sh` in the
 installer repo) is no longer needed; podman and distrobox stay installed.
+
+## Buildroot development
+
+The NixOS configuration installs the Buildroot tools. To use them before switching
+the system, run `nix shell .#buildroot` from this repository. Run Buildroot as a
+regular user; its FHS environment provides `/usr/bin/file` and the loader needed by
+prebuilt host toolchains.
+
+`buildroot` forwards arguments to `make` in the writable, pinned Buildroot 2026.05.3
+tree. It extracts the tree once under `~/buildroot-workspace` and shares downloads
+in `~/.buildroot-dl`. Set `BUILDROOT_WORKSPACE` or `BR2_DL_DIR` to use other
+locations. Use absolute `O=` directories so builds for different boards do not
+overwrite one another:
+
+```sh
+out="$HOME/buildroot-workspace/out"
+
+buildroot O="$out/aarch64" qemu_aarch64_virt_defconfig
+buildroot O="$out/aarch64" menuconfig           # optional
+buildroot O="$out/aarch64" -j"$(nproc)"
+run-qemu-aarch64-virt "$out/aarch64/images"
+
+buildroot O="$out/riscv64" qemu_riscv64_virt_defconfig
+buildroot O="$out/riscv64" -j"$(nproc)"
+run-qemu-riscv64-virt "$out/riscv64/images"
+```
+
+Without an image directory, each runner uses `output/images` in the pinned tree
+(the default when `O=` is omitted). QEMU uses software emulation for these
+guests on x86-64; use `Ctrl-a`, then `x`, to quit the serial console.
+
+- For a custom project, pass `BR2_EXTERNAL=/absolute/path/to/project` when
+  configuring it. For a separate Buildroot checkout, enter the FHS environment
+  with `buildroot --shell` from that checkout and run `make` there.
+- Add `sdk` to the build command to produce a relocatable SDK in `images/`.
+- The NixOS module registers aarch64 and riscv64 with `binfmt` for foreign static
+  executables. For a dynamic executable, pass the matching rootfs as the loader
+  prefix, for example `run-target -L "$out/aarch64/target" "$out/aarch64/target/bin/busybox" uname -m`.
+  For riscv64, use `run-target-riscv64` and the riscv64 paths.
 
 ## Keyboard and mouse sharing with Windows
 

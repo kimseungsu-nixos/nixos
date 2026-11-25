@@ -173,6 +173,9 @@
       inherit lan-mouse-niri;
       system = "x86_64-linux";
     };
+    packages.x86_64-linux.buildroot = import ./packages/buildroot.nix {
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    };
     packages.x86_64-linux.colcon-ros2 = colconRos2;
     packages.x86_64-linux.rosboard = rosboard;
     packages.x86_64-linux.ros2 = symlinkJoin {
