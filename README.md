@@ -14,6 +14,7 @@ Noctalia shell.
 | `modules/resources.nix` | 8 GiB zram, 4 GiB Btrfs swap file, CPU frequency policy |
 | `modules/desktop.nix` | niri session, keyboard, Korean input (kime), audio, Bluetooth, printing |
 | `modules/apps.nix` | Hancom Office, Nautilus, podman/distrobox, CLI tools |
+| `modules/buildroot.nix` | Buildroot toolchain, QEMU board runners, cross-binary execution |
 | `modules/theme.nix` | login wallpaper, Bibata cursor package, fonts |
 | `home.nix`, `home/` | home-manager: niri config (`niri.nix`), GTK theme and Ghostty (`home.nix`), GUI apps (`packages.nix`), tray bridge (`xembedsniproxy/`), clipboard helper (`copy-image/`) |
 | `hardware-configuration.nix` | generated for this machine |
@@ -37,6 +38,14 @@ Noctalia shell.
   To use the matching `colcon` from an existing workspace without switching the system, run
   `nix shell ~/github/kimseungsu-nixos/nixos#ros2 --command colcon build --cmake-clean-cache`.
   For direct `cmake` commands, use `nix develop ~/github/kimseungsu-nixos/nixos#ros2`.
+- Buildroot (`modules/buildroot.nix`): `buildroot` runs `make <defconfig>` / `menuconfig` /
+  `make` in `~/buildroot-workspace/buildroot-2026.05.3`, unpacked once from the store tarball
+  (Buildroot writes into its own tree and refuses to run as root); downloads are cached in
+  `~/.buildroot-dl`. Boot a board with `run-qemu-riscv64-virt` or `run-qemu-aarch64-virt`,
+  which use Buildroot's own documented QEMU command lines and read `output/images/` unless a
+  directory is passed. Target binaries of a built rootfs run directly here: `boot.binfmt` has
+  `aarch64-linux` and `riscv64-linux` registered. `run-target` executes a target binary via
+  QEMU user mode for the cases binfmt cannot handle (setuid, chroot).
 - Old builds are cleaned up automatically: a weekly `nix.gc` deletes
   generations older than 7 days and `/boot` keeps the last 5.
 - Screenshots (`Print`, `Mod+Shift+S`) go to `~/Pictures/Screenshots` and onto the clipboard as
