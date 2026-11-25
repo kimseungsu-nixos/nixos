@@ -118,8 +118,8 @@ let
   };
 
   # A target binary that binfmt refuses (setuid, chroot, absolute interpreter
-  # paths) can be executed explicitly. riscv64 binaries use qemu-riscv64 there;
-  # aarch64 ones fall to the interpreter below.
+  # paths) can be executed explicitly. One command per architecture, so a
+  # riscv64 target is never handed to the aarch64 emulator.
   runTargetRiscv64 = pkgs.writeShellApplication {
     name = "run-target-riscv64";
     runtimeInputs = [ pkgs.qemu-user ];
