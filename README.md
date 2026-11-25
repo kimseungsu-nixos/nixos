@@ -44,8 +44,9 @@ Noctalia shell.
   `~/.buildroot-dl`. Boot a board with `run-qemu-riscv64-virt` or `run-qemu-aarch64-virt`,
   which use Buildroot's own documented QEMU command lines and read `output/images/` unless a
   directory is passed. Target binaries of a built rootfs run directly here: `boot.binfmt` has
-  `aarch64-linux` and `riscv64-linux` registered. `run-target` executes a target binary via
-  QEMU user mode for the cases binfmt cannot handle (setuid, chroot).
+  `aarch64-linux` and `riscv64-linux` registered. `run-target` executes an aarch64 binary and
+  `run-target-riscv64` a riscv64 one via QEMU user mode, for the cases binfmt cannot handle
+  (setuid, chroot).
 - Old builds are cleaned up automatically: a weekly `nix.gc` deletes
   generations older than 7 days and `/boot` keeps the last 5.
 - Screenshots (`Print`, `Mod+Shift+S`) go to `~/Pictures/Screenshots` and onto the clipboard as

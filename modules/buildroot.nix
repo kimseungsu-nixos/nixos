@@ -117,8 +117,18 @@ let
     '';
   };
 
-  # Buildroot ships its own target toolchain; this one covers running a target
-  # binary directly on this machine.
+  # A target binary that binfmt refuses (setuid, chroot, absolute interpreter
+  # paths) can be executed explicitly. riscv64 binaries use qemu-riscv64 there;
+  # aarch64 ones fall to the interpreter below.
+  runTargetRiscv64 = pkgs.writeShellApplication {
+    name = "run-target-riscv64";
+    runtimeInputs = [ pkgs.qemu-user ];
+    text = ''
+      set -eu
+      exec ${pkgs.qemu-user}/bin/qemu-riscv64 "$@"
+    '';
+  };
+
   runTarget = pkgs.writeShellApplication {
     name = "run-target";
     runtimeInputs = [ pkgs.qemu-user ];
@@ -134,6 +144,7 @@ in
     runRiscv64Virt
     runAarch64Virt
     runTarget
+    runTargetRiscv64
   ] ++ (with pkgs; [
     qemu
     qemu-user
