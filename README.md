@@ -13,7 +13,7 @@ Noctalia shell.
 | `modules/nix.nix` | build parallelism, caches, garbage collection, store optimisation |
 | `modules/resources.nix` | 8 GiB zram, 4 GiB Btrfs swap file, CPU frequency policy |
 | `modules/desktop.nix` | niri session, keyboard, Korean input (kime), audio, Bluetooth, printing |
-| `modules/apps.nix` | Hancom Office, Nautilus, podman/distrobox, CLI tools |
+| `modules/apps.nix` | Hancom Office, Nautilus, podman/distrobox, CLI tools (`gh`, `fj`, ...) |
 | `modules/buildroot.nix`, `packages/buildroot.nix` | Buildroot FHS environment, QEMU runners, cross-binary execution |
 | `modules/theme.nix` | login wallpaper, Bibata cursor package, fonts |
 | `home.nix`, `home/` | home-manager: niri config (`niri.nix`), GTK theme and Ghostty (`home.nix`), GUI apps (`packages.nix`), tray bridge (`xembedsniproxy/`), clipboard helper (`copy-image/`) |

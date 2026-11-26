@@ -167,6 +167,7 @@ in
     wget
     git
     gh
+    forgejo-cli
     btop
     ghostty
     distrobox
