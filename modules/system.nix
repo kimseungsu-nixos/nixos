@@ -89,12 +89,12 @@
 
   security.sudo.extraConfig = "Defaults:linux pwfeedback";
 
-  # Allow all users to read/write USB device nodes and all USB-backed nodes
-  # (including tty, hidraw, input, and block devices). Keep the mode final so
-  # later vendor rules cannot restrict it again.
+  # Allow all users to read/write USB devices and USB-backed tty/hidraw nodes.
+  # Keep the mode final so later vendor rules cannot restrict it again.
   services.udev.extraRules = ''
     SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", MODE:="0666"
-    SUBSYSTEMS=="usb", MODE:="0666"
+    SUBSYSTEM=="tty", SUBSYSTEMS=="usb", MODE:="0666"
+    SUBSYSTEM=="hidraw", SUBSYSTEMS=="usb", MODE:="0666"
   '';
 
   # --- SC-IPK DriverStation ---
