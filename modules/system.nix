@@ -89,6 +89,14 @@
 
   security.sudo.extraConfig = "Defaults:linux pwfeedback";
 
+  # Allow all users to read/write USB device nodes and all USB-backed nodes
+  # (including tty, hidraw, input, and block devices). Keep the mode final so
+  # later vendor rules cannot restrict it again.
+  services.udev.extraRules = ''
+    SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", MODE:="0666"
+    SUBSYSTEMS=="usb", MODE:="0666"
+  '';
+
   # --- SC-IPK DriverStation ---
   # DS(Avalonia)는 네이티브 백엔드에서 libinput으로 키보드를 직접 연다.
   # libinput은 O_RDWR로 열어야 하므로 /dev/input/event* 가 0660(input) 이어야 한다.
