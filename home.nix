@@ -174,5 +174,7 @@
     # Nautilus launches Ghostty in the selected folder via its process working directory.
     gtk-single-instance = false
     working-directory = inherit
+    # Let terminal applications receive Ctrl+Enter instead of entering fullscreen.
+    keybind = ctrl+enter=unbind
   '';
 }
