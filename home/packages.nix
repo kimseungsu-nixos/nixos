@@ -1,4 +1,4 @@
-{ pkgs, rosEnv, colconRos2, ... }:
+{ pkgs, rosEnv, colconRos2, antigravity, ... }:
 let
   # Puts an image on the clipboard as PNG and BMP (Wine programs paste the BMP).
   copyImage = pkgs.callPackage ./copy-image { };
@@ -12,7 +12,7 @@ in
   home.packages = with pkgs; [
     kdePackages.kate
     vscode
-    (import ../packages/antigravity.nix { inherit pkgs; })
+    (import ../packages/antigravity.nix { inherit pkgs antigravity; })
     # Rust toolchain and editor integration.
     rustc
     cargo

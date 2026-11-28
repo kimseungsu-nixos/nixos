@@ -214,7 +214,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              extraSpecialArgs = { inherit nix-packages noctalia nix-frc2020-vmx rosEnv lan-mouse-niri colconRos2; };
+              extraSpecialArgs = { antigravity = (import nixpkgs-chatgpt { system = "x86_64-linux"; config.allowUnfree = true; }).antigravity-ide; inherit nix-packages noctalia nix-frc2020-vmx rosEnv lan-mouse-niri colconRos2; };
               # An existing config file is moved aside instead of aborting
               # the activation.
               backupFileExtension = "hm-backup";

@@ -1,4 +1,4 @@
-{ pkgs }:
+{ pkgs, antigravity ? pkgs.antigravity }:
 let
   browserTools = pkgs.writeShellScriptBin "xdg-open" ''
     case "''${1:-}" in
@@ -9,9 +9,12 @@ let
 in
 pkgs.symlinkJoin {
   name = "antigravity-firefox";
-  paths = [ pkgs.antigravity ];
+  paths = [ antigravity ];
   nativeBuildInputs = [ pkgs.makeWrapper ];
   postBuild = ''
+    if [ ! -e "$out/bin/antigravity" ]; then
+      ln -s "$out/bin/antigravity-ide" "$out/bin/antigravity"
+    fi
     wrapProgram $out/bin/antigravity \
       --set BROWSER ${pkgs.firefox}/bin/firefox \
       --prefix PATH : ${browserTools}/bin
@@ -20,7 +23,8 @@ pkgs.symlinkJoin {
       rm "$desktop"
       cp "$target" "$desktop"
       chmod u+w "$desktop"
-      substituteInPlace "$desktop" --replace '${pkgs.antigravity}/bin/antigravity' "$out/bin/antigravity"
+      substituteInPlace "$desktop" --replace "Exec=antigravity-ide" "Exec=antigravity"
+      substituteInPlace "$desktop" --replace '${antigravity}/bin/antigravity' "$out/bin/antigravity"
     done
   '';
 }
