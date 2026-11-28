@@ -147,9 +147,10 @@ let
     }
 
     binds {
-        // Handle conversion before Wine/toolkits can consume or reinterpret the key.
-        Hangul repeat=false allow-inhibiting=false allow-when-locked=true { spawn "${osConfig.i18n.inputMethod.package}/bin/fcitx5-remote" "-t"; }
-        Shift+Space repeat=false allow-inhibiting=false allow-when-locked=true { spawn "${osConfig.i18n.inputMethod.package}/bin/fcitx5-remote" "-t"; }
+        // Handle conversion before Wine/toolkits, but let Lan Mouse inhibit these
+        // shortcuts while forwarding the keyboard to another computer.
+        Hangul repeat=false allow-inhibiting=true allow-when-locked=true { spawn "${osConfig.i18n.inputMethod.package}/bin/fcitx5-remote" "-t"; }
+        Shift+Space repeat=false allow-inhibiting=true allow-when-locked=true { spawn "${osConfig.i18n.inputMethod.package}/bin/fcitx5-remote" "-t"; }
         Mod+Return { spawn "ghostty"; }
         Mod+Space { spawn-sh "noctalia msg panel-toggle launcher"; }
         Mod+S { spawn-sh "noctalia msg panel-toggle control-center"; }

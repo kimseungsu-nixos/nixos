@@ -12,6 +12,7 @@ in
   home.packages = with pkgs; [
     kdePackages.kate
     vscode
+    (import ../packages/antigravity.nix { inherit pkgs; })
     # Rust toolchain and editor integration.
     rustc
     cargo
