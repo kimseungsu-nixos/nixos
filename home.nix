@@ -3,7 +3,7 @@
 {
   imports = [
     ./home/niri.nix
-    ./home/kime.nix
+    ./home/fcitx5.nix
     ./home/packages.nix
   ];
 

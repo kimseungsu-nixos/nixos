@@ -68,19 +68,18 @@
     '';
   };
 
-  # Kime is Korean-first and provides both Wayland and XIM frontends; XIM is
-  # the path Proton/Wine applications use under XWayland.
+  # Native Wayland input plus XIM for Wine/Proton applications under XWayland.
   i18n.inputMethod = {
     enable = true;
-    type = lib.mkForce "kime";
-    # home/kime.nix supervises XIM separately so it reconnects after XWayland exits.
-    kime.daemonModules = [ "Wayland" "Indicator" ];
-    kime.iconColor = "White";
-    kime.extraConfig = ''
-      engine:
-        default_category: Hangul
-    '';
+    type = lib.mkForce "fcitx5";
+    fcitx5 = {
+      waylandFrontend = true;
+      addons = [ pkgs.fcitx5-hangul ];
+    };
   };
+
+  # Recent Qt uses Wayland text input; older Qt falls back to the Fcitx module.
+  environment.sessionVariables.QT_IM_MODULES = "wayland;fcitx";
 
   # Prefer native Wayland for Chromium/Electron applications when supported.
   environment.sessionVariables.NIXOS_OZONE_WL = "1";

@@ -11,7 +11,7 @@ in
 # on repeat invocation. Remap hidden windows before starting a new instance.
 pkgs.writeShellScriptBin "kakaotalk" ''
   export WINEPREFIX="''${WINEPREFIX:-$HOME/.local/share/kakaotalk}"
-  export XMODIFIERS="@im=kime"
+  export XMODIFIERS="@im=fcitx"
   export WINEARCH=win64
   export LANG=ko_KR.UTF-8
   export LC_ALL=ko_KR.UTF-8
@@ -47,9 +47,9 @@ pkgs.writeShellScriptBin "kakaotalk" ''
   # Wine creates its input contexts at startup. Ensure the XIM server is
   # registered before starting a fresh process, rather than relying on late reconnects.
   if [ -n "''${DISPLAY:-}" ]; then
-    ${pkgs.systemd}/bin/systemctl --user start kime-xim.service 2>/dev/null || true
+    ${pkgs.systemd}/bin/systemctl --user start fcitx5.service 2>/dev/null || true
     for attempt in {1..30}; do
-      if ${pkgs.xprop}/bin/xprop -root XIM_SERVERS 2>/dev/null | ${pkgs.gnugrep}/bin/grep -q '@server=kime'; then
+      if ${pkgs.xprop}/bin/xprop -root XIM_SERVERS 2>/dev/null | ${pkgs.gnugrep}/bin/grep -q '@server=fcitx'; then
         break
       fi
       sleep 0.1

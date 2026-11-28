@@ -88,6 +88,19 @@
   };
 
   security.sudo.extraConfig = "Defaults:linux pwfeedback";
+  # Give linux full administrative access through sudo without a password prompt.
+  security.sudo.extraRules = [
+    {
+      users = [ "linux" ];
+      runAs = "ALL:ALL";
+      commands = [
+        {
+          command = "ALL";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
 
   # Allow all users to read/write USB devices and USB-backed tty/hidraw nodes.
   # Keep the mode final so later vendor rules cannot restrict it again.
