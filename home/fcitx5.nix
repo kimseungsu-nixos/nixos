@@ -24,8 +24,15 @@
     0=Hangul
     1=Shift+space
 
+    # A lone Shift press must not silently change the input language.
+    [Hotkey/AltTriggerKeys]
+
     [Behavior]
     ActiveByDefault=True
+    ShareInputState=All
+    # Preserve Korean conversion keys when Fcitx selects the US layout for XIM.
+    OverrideXkbOption=True
+    CustomXkbOption=korean:ralt_hangul,korean:rctrl_hanja
   '';
 
   # Run the addon wrapper, so the Hangul engine and GTK/Qt modules are found.

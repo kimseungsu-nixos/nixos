@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, osConfig, ... }:
 
 let
   satellite = import ./xwayland-satellite.nix { inherit pkgs; };
@@ -147,6 +147,9 @@ let
     }
 
     binds {
+        // Handle conversion before Wine/toolkits can consume or reinterpret the key.
+        Hangul repeat=false allow-inhibiting=false allow-when-locked=true { spawn "${osConfig.i18n.inputMethod.package}/bin/fcitx5-remote" "-t"; }
+        Shift+Space repeat=false allow-inhibiting=false allow-when-locked=true { spawn "${osConfig.i18n.inputMethod.package}/bin/fcitx5-remote" "-t"; }
         Mod+Return { spawn "ghostty"; }
         Mod+Space { spawn-sh "noctalia msg panel-toggle launcher"; }
         Mod+S { spawn-sh "noctalia msg panel-toggle control-center"; }
